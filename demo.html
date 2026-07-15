@@ -187,36 +187,134 @@ URL: http://localhost:8080/mcp/sse</code></pre>
 
     <section class="demo-section">
       <h2><span class="step-badge">02</span>在 AI 工具中直接提问</h2>
-      <div class="terminal-demo">
-        <div class="terminal-header">
-          <span class="dot red"></span>
-          <span class="dot yellow"></span>
-          <span class="dot green"></span>
+      <p class="demo-note">配置好 MCP 后，直接在 AI 工具中用中文提问代码问题</p>
+
+      <div class="mcp-tool-tabs query-tabs">
+        <button class="mcp-tab active" data-tool="trae-query">
+          <span class="tab-icon">🔧</span>
+          <span>Trae</span>
+        </button>
+        <button class="mcp-tab" data-tool="claude-query">
+          <span class="tab-icon">◈</span>
           <span>Claude Code</span>
-        </div>
-        <div class="terminal-body">
-          <div class="line user">
-            <span class="prompt">&gt;</span>
-            <span class="type-text" data-text="帮我找一下登录流程的实现"></span>
+        </button>
+        <button class="mcp-tab" data-tool="cursor-query">
+          <span class="tab-icon">⚡</span>
+          <span>Cursor</span>
+        </button>
+      </div>
+
+      <div class="mcp-panel active" id="panel-trae-query">
+        <div class="terminal-demo">
+          <div class="terminal-header">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span>Trae</span>
           </div>
-          <div class="line ai">
-            <span class="ai-label">AI</span>
-            <span>正在查询 CodePop...</span>
-          </div>
-          <div class="line result">
-            <span class="result-label">CodePop</span>
-            <div class="code-result">
-              <p>找到 3 处相关代码：</p>
-              <ul>
-                <li>src/auth/login.go:42 — 登录入口</li>
-                <li>src/auth/jwt.go:18 — Token 生成</li>
-                <li>src/middleware/auth.go:7 — 鉴权中间件</li>
-              </ul>
+          <div class="terminal-body">
+            <div class="line user">
+              <span class="prompt">&gt;</span>
+              <span class="type-text" data-text="帮我找一下骑手登录的实现"></span>
+            </div>
+            <div class="line ai">
+              <span class="ai-label">AI</span>
+              <span class="fade-in">正在查询 CodePop...</span>
+            </div>
+            <div class="line result fade-in-delay">
+              <span class="result-label">CodePop</span>
+              <div class="code-result">
+                <p>找到 3 处相关代码（语义匹配）：</p>
+                <ul>
+                  <li><span class="score">★ 0.94</span> src/auth/<span class="hl">rider_login.go</span>:42 — 骑手登录入口</li>
+                  <li><span class="score">★ 0.91</span> src/auth/<span class="hl">jwt_verify.go</span>:18 — Token 生成</li>
+                  <li><span class="score">★ 0.87</span> middleware/<span class="hl">auth.go</span>:7 — 鉴权中间件</li>
+                </ul>
+              </div>
+            </div>
+            <div class="line chain fade-in-delay-2">
+              <span class="chain-label">调用链</span>
+              <div class="chain-flow">
+                riderLogin() → verifyToken() → checkPermission()
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <p class="demo-note">支持中文自然语言查询，无需记住函数名。</p>
+
+      <div class="mcp-panel" id="panel-claude-query">
+        <div class="terminal-demo">
+          <div class="terminal-header">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span>Claude Code</span>
+          </div>
+          <div class="terminal-body">
+            <div class="line user">
+              <span class="prompt">&gt;</span>
+              <span class="type-text" data-text="这个项目的限流逻辑是怎么实现的？"></span>
+            </div>
+            <div class="line ai">
+              <span class="ai-label">AI</span>
+              <span class="fade-in">正在查询 CodePop...</span>
+            </div>
+            <div class="line result fade-in-delay">
+              <span class="result-label">CodePop</span>
+              <div class="code-result">
+                <p>找到 4 处相关代码：</p>
+                <ul>
+                  <li><span class="score">★ 0.96</span> src/ratelimit/<span class="hl">token_bucket.go</span>:15 — 令牌桶算法</li>
+                  <li><span class="score">★ 0.92</span> src/middleware/<span class="hl">rate_limiter.go</span>:33 — 限流中间件</li>
+                  <li><span class="score">★ 0.88</span> src/config/<span class="hl">rate_config.go</span>:8 — 限流配置</li>
+                  <li><span class="score">★ 0.85</span> src/utils/<span class="hl">backoff.go</span>:21 — 退避策略</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mcp-panel" id="panel-cursor-query">
+        <div class="terminal-demo">
+          <div class="terminal-header">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span>Cursor</span>
+          </div>
+          <div class="terminal-body">
+            <div class="line user">
+              <span class="prompt">&gt;</span>
+              <span class="type-text" data-text="用户订单创建的完整流程"></span>
+            </div>
+            <div class="line ai">
+              <span class="ai-label">AI</span>
+              <span class="fade-in">正在查询 CodePop...</span>
+            </div>
+            <div class="line result fade-in-delay">
+              <span class="result-label">CodePop</span>
+              <div class="code-result">
+                <p>跨文件调用链：</p>
+                <ul>
+                  <li><span class="score">★ 0.95</span> api/<span class="hl">order_controller.go</span>:28 — 订单创建接口</li>
+                  <li><span class="score">★ 0.93</span> service/<span class="hl">order_service.go</span>:56 — 订单业务逻辑</li>
+                  <li><span class="score">★ 0.90</span> dao/<span class="hl">order_dao.go</span>:42 — 订单数据访问</li>
+                  <li><span class="score">★ 0.87</span> model/<span class="hl">order.go</span>:15 — 订单实体定义</li>
+                </ul>
+              </div>
+            </div>
+            <div class="line graph fade-in-delay-2">
+              <span class="chain-label">结构图</span>
+              <div class="ascii-graph">
+Controller → Service → DAO → Model
+   ↓           ↓        ↓      ↓
+Validate   Business  Query  Entity
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="demo-section">
@@ -309,17 +407,26 @@ URL: http://localhost:8080/mcp/sse</code></pre>
   </article>
 
   <script>
-    // MCP 工具切换
-    document.querySelectorAll('.mcp-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.mcp-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
+    // 通用 tab 切换（支持配置区和查询区两组）
+    function initTabs(tabSelector) {
+      document.querySelectorAll(tabSelector).forEach(tab => {
+        tab.addEventListener('click', () => {
+          const section = tab.closest('.demo-section');
+          const tabs = section.querySelectorAll('.mcp-tab');
+          const panels = section.querySelectorAll('.mcp-panel');
 
-        const tool = tab.dataset.tool;
-        document.querySelectorAll('.mcp-panel').forEach(p => p.classList.remove('active'));
-        document.getElementById('panel-' + tool).classList.add('active');
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          panels.forEach(p => p.classList.remove('active'));
+          const tool = tab.dataset.tool;
+          const target = section.querySelector('#panel-' + tool);
+          if (target) target.classList.add('active');
+        });
       });
-    });
+    }
+
+    initTabs('.mcp-tool-tabs .mcp-tab');
 
     // 复制配置
     function copyConfig(btn) {

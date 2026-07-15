@@ -1312,13 +1312,7 @@ code {
 
 .terminal-body .line {
   margin: 0.6rem 0;
-  opacity: 0;
-  animation: fadeIn 0.5s forwards;
 }
-
-.terminal-body .line:nth-child(1) { animation-delay: 0.2s; }
-.terminal-body .line:nth-child(2) { animation-delay: 2.4s; }
-.terminal-body .line:nth-child(3) { animation-delay: 3.4s; }
 
 .terminal-body .prompt {
   color: #27c93f;
@@ -1341,37 +1335,128 @@ code {
   display: inline-block;
   overflow: hidden;
   white-space: nowrap;
-  animation: typing 2s steps(22) forwards;
-  border-right: 2px solid #27c93f;
+  border-right: 2px solid #ff3d8a;
+  animation: typing 2s steps(30) forwards, blink 0.8s step-end infinite;
   vertical-align: bottom;
+  max-width: 100%;
 }
 
 .code-result {
   margin-top: 0.4rem;
   padding: 0.8rem 1rem;
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 4px;
-  border-left: 3px solid var(--accent);
+  background: rgba(255, 61, 138, 0.08);
+  border-radius: 0 6px 6px 0;
+  border-left: 3px solid #ff3d8a;
 }
 
-.code-result p { margin: 0 0 0.4rem; }
+.code-result p {
+  color: #ff3d8a;
+  font-weight: 600;
+  margin: 0 0 0.4rem;
+}
+
 .code-result ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
+
 .code-result li {
   margin: 0.25rem 0;
-  color: #b8c0ff;
+  color: #e0e0e0;
+  font-size: 0.9rem;
+}
+
+.code-result .score {
+  color: #00d4ff;
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+.code-result .hl {
+  color: #ffd700;
+  font-weight: 600;
+}
+
+.chain-label {
+  color: #27c93f;
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+.chain-flow {
+  display: inline-block;
+  padding: 8px 16px;
+  background: rgba(39, 201, 63, 0.1);
+  border: 1px solid #27c93f;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: #27c93f;
+}
+
+.ascii-graph {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #ffd700;
+  white-space: pre;
+  padding: 12px;
+  background: rgba(255, 215, 0, 0.05);
+  border-radius: 6px;
+  margin-top: 8px;
+}
+
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 0.5s ease forwards;
+  animation-delay: 2s;
+}
+
+.fade-in-delay {
+  opacity: 0;
+  animation: fadeIn 0.6s ease forwards;
+  animation-delay: 3s;
+}
+
+.fade-in-delay-2 {
+  opacity: 0;
+  animation: fadeIn 0.6s ease forwards;
+  animation-delay: 4s;
+}
+
+/* 切换面板时动画重新触发 */
+.mcp-panel.active .type-text {
+  animation: typing 2s steps(30) forwards, blink 0.8s step-end infinite;
+}
+
+.mcp-panel.active .fade-in {
+  animation: fadeIn 0.5s ease forwards;
+  animation-delay: 2s;
+}
+
+.mcp-panel.active .fade-in-delay {
+  animation: fadeIn 0.6s ease forwards;
+  animation-delay: 3s;
+}
+
+.mcp-panel.active .fade-in-delay-2 {
+  animation: fadeIn 0.6s ease forwards;
+  animation-delay: 4s;
 }
 
 @keyframes typing {
   from { width: 0; }
-  to { width: 22ch; border-color: transparent; }
+  to { width: 100%; }
+}
+
+@keyframes blink {
+  50% { border-color: transparent; }
 }
 
 @keyframes fadeIn {
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .demo-note {
