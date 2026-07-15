@@ -1630,7 +1630,10 @@ code {
 }
 
 .flow-step {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
   opacity: 0;
   transform: translateY(20px);
   animation: fadeInUp 0.6s forwards;
@@ -1641,28 +1644,61 @@ code {
 .flow-step:nth-child(5) { animation-delay: 1.2s; }
 .flow-step:nth-child(7) { animation-delay: 1.8s; }
 
-.flow-icon {
-  font-size: 2.4rem;
-  margin-bottom: 0.6rem;
-}
-
-.flow-text {
+.flow-step span {
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 0.85rem;
+  color: var(--ink);
 }
 
+.pop-icon {
+  width: 64px;
+  height: 64px;
+  position: relative;
+}
+
+.pop-icon svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(3px 3px 0 #1a1a2e);
+  transition: transform 0.2s;
+}
+
+.pop-icon:hover svg {
+  transform: translate(-2px, -2px);
+  filter: drop-shadow(5px 5px 0 #1a1a2e);
+}
+
+/* 波普圆点背景装饰 */
+.pop-icon::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #1a1a2e;
+  z-index: -1;
+}
+
+.icon-code::after { background: #ff3d8a; }
+.icon-webhook::after { background: #00d4ff; }
+.icon-search::after { background: #ffd700; }
+.icon-check::after { background: #ff3d8a; }
+
 .flow-arrow {
-  font-size: 1.6rem;
+  font-size: 2rem;
   color: var(--accent);
-  animation: pulseArrow 1.2s infinite;
+  font-weight: 900;
+  animation: arrowPulse 1.5s ease-in-out infinite;
 }
 
 @keyframes fadeInUp {
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pulseArrow {
+@keyframes arrowPulse {
   0%, 100% { transform: translateX(0); }
   50% { transform: translateX(6px); }
 }
