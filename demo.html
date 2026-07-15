@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在线演示 - Code:Pop</title>
+  <meta name="description" content="Code:Pop 在线演示：MCP 接入、管理后台、GitHub Webhook 自动索引、四路召回效果对比，纯 CSS 动画模拟真实交互。">
+  <meta name="theme-color" content="#F5F5F0">
+  <meta property="og:title" content="在线演示 - Code:Pop">
+  <meta property="og:description" content="看它怎么工作 · MCP · Dashboard · Webhook · 四路召回">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23ff3d8a'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <nav class="top-nav">
+    <a href="./index.html" class="nav-logo">Code:Pop</a>
+    <button class="nav-toggle" aria-label="打开导航" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links">
+      <a href="./index.html">首页</a>
+      <a href="./docs.html">使用教程</a>
+      <a href="./demo.html" class="active">在线演示</a>
+      <a href="https://github.com/ilyuve/code-pop" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </nav>
+
+  <div class="ticker">
+    <div class="ticker-track">
+      <span>★ CODE:POP / DEMO</span><span class="dot">●</span>
+      <span>SEE IT IN ACTION</span><span class="dot">●</span>
+      <span>MCP · DASHBOARD · WEBHOOK · RECALL</span><span class="dot">●</span>
+      <span>★ CODE:POP / DEMO</span><span class="dot">●</span>
+      <span>SEE IT IN ACTION</span><span class="dot">●</span>
+      <span>MCP · DASHBOARD · WEBHOOK · RECALL</span><span class="dot">●</span>
+    </div>
+  </div>
+
+  <article class="page demo-page">
+    <header class="demo-hero">
+      <h1 class="section-title">看它怎么工作</h1>
+      <p class="section-sub">// 用动画模拟真实场景：<span class="k">MCP 查询</span>、<span class="k">管理后台</span>、<span class="k">Webhook 自动索引</span>、<span class="k">四路召回对比</span>。</p>
+    </header>
+
+    <section class="demo-section">
+      <h2><span class="step-badge">01</span>在 AI 工具中直接提问</h2>
+      <div class="terminal-demo">
+        <div class="terminal-header">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+          <span>Claude Code</span>
+        </div>
+        <div class="terminal-body">
+          <div class="line user">
+            <span class="prompt">&gt;</span>
+            <span class="type-text" data-text="帮我找一下登录流程的实现"></span>
+          </div>
+          <div class="line ai">
+            <span class="ai-label">AI</span>
+            <span>正在查询 CodePop...</span>
+          </div>
+          <div class="line result">
+            <span class="result-label">CodePop</span>
+            <div class="code-result">
+              <p>找到 3 处相关代码：</p>
+              <ul>
+                <li>src/auth/login.go:42 — 登录入口</li>
+                <li>src/auth/jwt.go:18 — Token 生成</li>
+                <li>src/middleware/auth.go:7 — 鉴权中间件</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="demo-note">支持中文自然语言查询，无需记住函数名。</p>
+    </section>
+
+    <section class="demo-section">
+      <h2><span class="step-badge">02</span>管理后台一览</h2>
+      <div class="dashboard-preview">
+        <div class="dash-card">
+          <h4>Token 消耗</h4>
+          <div class="big-number" data-target="12847">0</div>
+          <div class="trend">↑ 23% 本周</div>
+        </div>
+        <div class="dash-card">
+          <h4>索引文件数</h4>
+          <div class="big-number" data-target="1247">0</div>
+          <div class="trend">实时同步中</div>
+        </div>
+        <div class="dash-card">
+          <h4>查询次数</h4>
+          <div class="big-number" data-target="892">0</div>
+          <div class="trend">平均 87ms/次</div>
+        </div>
+      </div>
+      <p class="demo-note">实时监控 API 消耗和索引状态。</p>
+    </section>
+
+    <section class="demo-section">
+      <h2><span class="step-badge">03</span>Git Push 自动索引</h2>
+      <div class="flow-demo">
+        <div class="flow-step">
+          <div class="flow-icon">📝</div>
+          <div class="flow-text">代码 Push</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-icon">⚡</div>
+          <div class="flow-text">Webhook 触发</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-icon">🔍</div>
+          <div class="flow-text">增量索引</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-icon">✅</div>
+          <div class="flow-text">记忆更新</div>
+        </div>
+      </div>
+      <p class="demo-note">无需手动操作，代码提交即自动更新索引。</p>
+    </section>
+
+    <section class="demo-section">
+      <h2><span class="step-badge">04</span>四路召回效果</h2>
+      <div class="query-demo">
+        <div class="query-input">
+          <span class="query-label">查询：</span>
+          <code>"用户登录的 JWT 验证"</code>
+        </div>
+        <div class="recall-results">
+          <div class="recall-way">
+            <h4>AST 结构检索</h4>
+            <div class="recall-score">匹配度: 85%</div>
+            <div class="recall-match">auth/login.go → validateJWT()</div>
+          </div>
+          <div class="recall-way">
+            <h4>语义向量</h4>
+            <div class="recall-score">匹配度: 94%</div>
+            <div class="recall-match">middleware/auth.go → checkToken()</div>
+          </div>
+          <div class="recall-way">
+            <h4>BM25 关键词</h4>
+            <div class="recall-score">匹配度: 78%</div>
+            <div class="recall-match">utils/jwt.go → decodeJWT()</div>
+          </div>
+          <div class="recall-way">
+            <h4>编辑距离</h4>
+            <div class="recall-score">匹配度: 72%</div>
+            <div class="recall-match">legacy/auth_old.py → jwt_verify()</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <span>© 2026 CODE:POP STUDIO</span>
+      <span class="dots">● ● ●</span>
+      <span class="warhol-can" aria-label="安迪·沃霍尔风格金宝汤罐头致敬彩蛋"><span class="can-mini-label">CODE<br>SOUP</span></span>
+      <span class="dots">● ● ●</span>
+      <span>POP. ART. CODE. ALIVE.</span>
+    </footer>
+  </article>
+</body>
+</html>
