@@ -1042,6 +1042,16 @@ body {
   transform: translateY(-1px);
 }
 
+.icp-line {
+  text-align: center;
+  padding: 1.2rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+  opacity: 0.55;
+  letter-spacing: 0.05em;
+}
+
 /* ====== TOP NAVIGATION ====== */
 .top-nav {
   position: fixed;
