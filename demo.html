@@ -336,6 +336,42 @@ Validate   Business  Query  Entity
           <div class="trend">平均 87ms/次</div>
         </div>
       </div>
+
+      <div class="demo-chart">
+        <h4>近7天 Token 消耗趋势</h4>
+        <div class="chart-bars">
+          <div class="bar" style="height: 40%"><span class="bar-val">1.2k</span></div>
+          <div class="bar" style="height: 65%"><span class="bar-val">2.1k</span></div>
+          <div class="bar" style="height: 55%"><span class="bar-val">1.8k</span></div>
+          <div class="bar" style="height: 80%"><span class="bar-val">2.6k</span></div>
+          <div class="bar" style="height: 70%"><span class="bar-val">2.3k</span></div>
+          <div class="bar" style="height: 90%"><span class="bar-val">2.9k</span></div>
+          <div class="bar active" style="height: 100%"><span class="bar-val">3.2k</span></div>
+        </div>
+        <div class="chart-labels">
+          <span>周一</span><span>周二</span><span>周三</span><span>周四</span><span>周五</span><span>周六</span><span>周日</span>
+        </div>
+      </div>
+
+      <div class="demo-logs">
+        <h4>最近查询</h4>
+        <div class="log-item">
+          <span class="log-query">"用户登录的JWT验证"</span>
+          <span class="log-time">2分钟前</span>
+          <span class="log-latency">87ms</span>
+        </div>
+        <div class="log-item">
+          <span class="log-query">"订单创建流程"</span>
+          <span class="log-time">5分钟前</span>
+          <span class="log-latency">92ms</span>
+        </div>
+        <div class="log-item">
+          <span class="log-query">"骑手登录实现"</span>
+          <span class="log-time">12分钟前</span>
+          <span class="log-latency">105ms</span>
+        </div>
+      </div>
+
       <p class="demo-note">实时监控 API 消耗和索引状态。</p>
     </section>
 
@@ -427,6 +463,39 @@ Validate   Business  Query  Entity
     }
 
     initTabs('.mcp-tool-tabs .mcp-tab');
+
+    // 数字滚动动画
+    function animateNumbers() {
+      const numbers = document.querySelectorAll('.big-number[data-target]');
+      numbers.forEach(el => {
+        const target = parseInt(el.dataset.target);
+        const duration = 1500;
+        const step = target / (duration / 16);
+        let current = 0;
+
+        const timer = setInterval(() => {
+          current += step;
+          if (current >= target) {
+            current = target;
+            clearInterval(timer);
+          }
+          el.textContent = Math.floor(current).toLocaleString();
+        }, 16);
+      });
+    }
+
+    // 当管理后台区域进入视口时触发数字动画
+    const dashObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          animateNumbers();
+          dashObserver.unobserve(entry.target);
+        }
+      });
+    });
+
+    const dashSection = document.querySelector('.dashboard-preview');
+    if (dashSection) dashObserver.observe(dashSection);
 
     // 复制配置
     function copyConfig(btn) {
