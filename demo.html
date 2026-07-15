@@ -40,11 +40,153 @@
   <article class="page demo-page">
     <header class="demo-hero">
       <h1 class="section-title">看它怎么工作</h1>
-      <p class="section-sub">// 用动画模拟真实场景：<span class="k">MCP 查询</span>、<span class="k">管理后台</span>、<span class="k">Webhook 自动索引</span>、<span class="k">四路召回对比</span>。</p>
+      <p class="section-sub">// 用动画模拟真实场景：<span class="k">MCP 配置</span>、<span class="k">MCP 查询</span>、<span class="k">管理后台</span>、<span class="k">Webhook 自动索引</span>、<span class="k">四路召回对比</span>。</p>
     </header>
 
     <section class="demo-section">
-      <h2><span class="step-badge">01</span>在 AI 工具中直接提问</h2>
+      <h2><span class="step-badge">01</span>配置 MCP 接入</h2>
+      <p class="demo-note">选择你的 AI 工具，复制配置即可接入 CodePop</p>
+
+      <div class="mcp-tool-tabs">
+        <button class="mcp-tab active" data-tool="trae">
+          <span class="tab-icon">🔧</span>
+          <span>Trae</span>
+        </button>
+        <button class="mcp-tab" data-tool="claude">
+          <span class="tab-icon">◈</span>
+          <span>Claude Code</span>
+        </button>
+        <button class="mcp-tab" data-tool="cursor">
+          <span class="tab-icon">⚡</span>
+          <span>Cursor</span>
+        </button>
+      </div>
+
+      <div class="mcp-panel active" id="panel-trae">
+        <div class="mcp-step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h4>打开 Trae Settings</h4>
+            <p>进入 Settings → MCP → Add Server</p>
+          </div>
+        </div>
+        <div class="mcp-step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h4>粘贴配置</h4>
+            <div class="config-block">
+              <pre><code>{
+  "mcpServers": {
+    "codepop": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sse@latest",
+        "http://localhost:8080/mcp/sse"
+      ]
+    }
+  }
+}</code></pre>
+              <button class="copy-btn" onclick="copyConfig(this)">复制</button>
+            </div>
+          </div>
+        </div>
+        <div class="mcp-step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h4>重启 Trae</h4>
+            <p>配置生效后，在对话中直接提问代码相关问题</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mcp-panel" id="panel-claude">
+        <div class="mcp-step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h4>编辑配置文件</h4>
+            <p>macOS: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code></p>
+          </div>
+        </div>
+        <div class="mcp-step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h4>粘贴配置</h4>
+            <div class="config-block">
+              <pre><code>{
+  "mcpServers": {
+    "codepop": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sse@latest",
+        "http://localhost:8080/mcp/sse"
+      ]
+    }
+  }
+}</code></pre>
+              <button class="copy-btn" onclick="copyConfig(this)">复制</button>
+            </div>
+          </div>
+        </div>
+        <div class="mcp-step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h4>重启 Claude Code</h4>
+            <p>完全退出后重新启动，MCP 工具自动加载</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mcp-panel" id="panel-cursor">
+        <div class="mcp-step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h4>打开 Cursor Settings</h4>
+            <p>进入 Settings → MCP → Add Server</p>
+          </div>
+        </div>
+        <div class="mcp-step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h4>选择 SSE 类型并填写 URL</h4>
+            <div class="config-block simple">
+              <pre><code>Server Type: SSE
+URL: http://localhost:8080/mcp/sse</code></pre>
+              <button class="copy-btn" onclick="copyConfig(this)">复制 URL</button>
+            </div>
+          </div>
+        </div>
+        <div class="mcp-step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h4>保存并测试</h4>
+            <p>点击 Save，Cursor 会自动验证连接。成功后即可使用。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mcp-tools-preview">
+        <h4>接入后可用的工具</h4>
+        <div class="tools-grid">
+          <div class="tool-card">
+            <div class="tool-name">codepop_search</div>
+            <div class="tool-desc">混合代码搜索（向量 + 符号 + BM25 + 调用图）</div>
+          </div>
+          <div class="tool-card">
+            <div class="tool-name">codepop_repos</div>
+            <div class="tool-desc">列出所有已索引的代码仓库</div>
+          </div>
+          <div class="tool-card">
+            <div class="tool-name">codepop_symbols</div>
+            <div class="tool-desc">查看指定文件的符号列表</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="demo-section">
+      <h2><span class="step-badge">02</span>在 AI 工具中直接提问</h2>
       <div class="terminal-demo">
         <div class="terminal-header">
           <span class="dot red"></span>
@@ -78,7 +220,7 @@
     </section>
 
     <section class="demo-section">
-      <h2><span class="step-badge">02</span>管理后台一览</h2>
+      <h2><span class="step-badge">03</span>管理后台一览</h2>
       <div class="dashboard-preview">
         <div class="dash-card">
           <h4>Token 消耗</h4>
@@ -100,7 +242,7 @@
     </section>
 
     <section class="demo-section">
-      <h2><span class="step-badge">03</span>Git Push 自动索引</h2>
+      <h2><span class="step-badge">04</span>Git Push 自动索引</h2>
       <div class="flow-demo">
         <div class="flow-step">
           <div class="flow-icon">📝</div>
@@ -126,7 +268,7 @@
     </section>
 
     <section class="demo-section">
-      <h2><span class="step-badge">04</span>四路召回效果</h2>
+      <h2><span class="step-badge">05</span>四路召回效果</h2>
       <div class="query-demo">
         <div class="query-input">
           <span class="query-label">查询：</span>
@@ -165,5 +307,33 @@
       <span>POP. ART. CODE. ALIVE.</span>
     </footer>
   </article>
+
+  <script>
+    // MCP 工具切换
+    document.querySelectorAll('.mcp-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.mcp-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        const tool = tab.dataset.tool;
+        document.querySelectorAll('.mcp-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('panel-' + tool).classList.add('active');
+      });
+    });
+
+    // 复制配置
+    function copyConfig(btn) {
+      const pre = btn.parentElement.querySelector('pre');
+      const text = pre.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '已复制';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = '复制';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+  </script>
 </body>
 </html>
