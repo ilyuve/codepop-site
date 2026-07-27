@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code:Pop — 让代码真正活着</title>
+  <meta name="description" content="Code:Pop 代码波普 — 本地 AI 代码记忆系统。通过 MCP 协议让 AI 工具直接查询你的代码库，支持语义召回、实时索引、GitHub Webhook 自动同步。">
+  <meta name="theme-color" content="#F7F5F0">
+  <meta property="og:title" content="Code:Pop — 让代码真正活着">
+  <meta property="og:description" content="本地 AI 代码记忆系统 · MCP 接入 · 语义召回 · 实时索引">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ff2e8a'/%3E%3Ctext x='16' y='22' font-size='16' font-weight='bold' text-anchor='middle' fill='%23fff'%3E%26lt;%3B%3E%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/fonts/fonts.css">
+  <style>
+    :root {
+      --bg: #F7F5F0;
+      --bg-2: #FFFEF8;
+      --ink: #1A1A1A;
+      --ink-2: #333333;
+      --muted: #6B6B6B;
+      --line: #1A1A1A;
+      --pop: #FF2E8A;
+      --cyan: #00E5FF;
+      --lemon: #FFE600;
+      --tangerine: #FF6B35;
+      --mint: #39FF14;
+      --violet: #B967FF;
+      --code-bg: #151528;
+      --shadow: 5px 5px 0 var(--line);
+      --font-display: 'Boldonse', 'EricaOne', sans-serif;
+      --font-head: 'BigShoulders', 'EricaOne', sans-serif;
+      --font-body: 'Outfit', system-ui, sans-serif;
+      --font-mono: 'JetBrainsMono', monospace;
+      --font-pixel: 'Silkscreen', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    ::selection {
+      background: var(--pop);
+      color: #fff;
+      text-shadow: 2px 2px 0 var(--line);
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ====== POP ART TEXTURE ====== */
+    .texture {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.55;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(255, 46, 138, 0.08) 0%, transparent 35%),
+        radial-gradient(circle at 80% 10%, rgba(0, 229, 255, 0.08) 0%, transparent 30%),
+        radial-gradient(circle at 60% 80%, rgba(255, 230, 0, 0.08) 0%, transparent 35%),
+        url("data:image/svg+xml,%3Csvg width='8' height='8' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%231a1a1a' opacity='0.10'/%3E%3C/svg%3E");
+    }
+
+    .halftone {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.18;
+      background-image: radial-gradient(circle, var(--line) 1.5px, transparent 1.6px);
+      background-size: 10px 10px;
+      mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
+      -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
+    }
+
+    /* ====== TOP NAV ====== */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.9rem 1.5rem;
+      background: rgba(247, 245, 240, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 2.5px solid var(--line);
+    }
+
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      color: var(--ink);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .nav-logo::before {
+      content: '';
+      width: 14px;
+      height: 14px;
+      background: var(--pop);
+      border: 2px solid var(--line);
+      transform: rotate(45deg);
+      animation: spin 8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(405deg); } }
+
+    .nav-links {
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--ink);
+      text-decoration: none;
+      padding: 0.45rem 0.85rem;
+      border: 2px solid transparent;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--lemon);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.25s ease;
+      z-index: -1;
+    }
+
+    .nav-links a:hover::after,
+    .nav-links a.active::after { transform: scaleX(1); }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      border-color: var(--line);
+      box-shadow: 3px 3px 0 var(--line);
+    }
+
+    .nav-toggle {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.4rem;
+    }
+
+    .nav-toggle span {
+      display: block;
+      width: 26px;
+      height: 3px;
+      background: var(--ink);
+      transition: 0.25s;
+    }
+
+    @media (max-width: 760px) {
+      .nav-links { display: none; position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; background: var(--bg); border-bottom: 2.5px solid var(--line); padding: 1rem; }
+      .nav-links.open { display: flex; }
+      .nav-toggle { display: flex; }
+    }
+
+    /* ====== TICKER ====== */
+    .ticker {
+      background: var(--lemon);
+      color: var(--ink);
+      border-bottom: 2.5px solid var(--line);
+      overflow: hidden;
+      white-space: nowrap;
+      padding: 0.55rem 0;
+    }
+
+    .ticker-track {
+      display: inline-flex;
+      animation: ticker 22s linear infinite;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+    }
+
+    .ticker-track span { padding: 0 1.2rem; }
+    .ticker-track .dot { color: var(--pop); }
+
+    @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+    /* ====== LAYOUT ====== */
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 1.5rem 5rem;
+    }
+
+    /* ====== HERO ====== */
+    .hero {
+      position: relative;
+      padding: 5rem 0 3.5rem;
+      border-bottom: 4px solid var(--line);
+      margin-bottom: 4rem;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -80px;
+      width: 340px;
+      height: 340px;
+      background: conic-gradient(from 0deg, var(--pop), var(--cyan), var(--lemon), var(--pop));
+      border-radius: 50%;
+      opacity: 0.16;
+      filter: blur(50px);
+      animation: blob 10s ease-in-out infinite alternate;
+    }
+
+    @keyframes blob { from { transform: translate(0,0) scale(1); } to { transform: translate(-30px, 30px) scale(1.1); } }
+
+    .hero-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-family: var(--font-pixel);
+      font-size: 0.66rem;
+      letter-spacing: 0.18em;
+      margin-bottom: 2.2rem;
+    }
+
+    .hero-meta .stamp {
+      border: 2.5px solid var(--line);
+      padding: 0.35rem 0.7rem;
+      background: #fff;
+      color: var(--pop);
+      transform: rotate(-4deg);
+      box-shadow: 3px 3px 0 var(--line);
+    }
+
+    .badge-line {
+      display: flex;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+
+    .badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 0.35rem 0.75rem;
+      border: 2px solid var(--line);
+      box-shadow: 3px 3px 0 var(--line);
+      transform: rotate(var(--r, -2deg));
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .badge:hover { transform: rotate(0deg) scale(1.05); box-shadow: 5px 5px 0 var(--line); }
+    .badge.pink { background: var(--pop); color: #fff; --r: -2deg; }
+    .badge.cyan { background: var(--cyan); --r: 1.5deg; }
+    .badge.lemon { background: var(--lemon); --r: -1deg; }
+    .badge.mint { background: var(--mint); --r: 2deg; }
+
+    .product-name {
+      font-family: var(--font-display);
+      font-size: clamp(5rem, 16vw, 13rem);
+      line-height: 0.85;
+      letter-spacing: -0.05em;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      position: relative;
+    }
+
+    .product-name .word-code {
+      color: var(--ink);
+      text-shadow: 5px 5px 0 var(--pop), 10px 10px 0 var(--cyan);
+      transition: text-shadow 0.3s ease;
+    }
+
+    .product-name:hover .word-code { text-shadow: 7px 7px 0 var(--pop), 13px 13px 0 var(--cyan), 17px 17px 0 var(--lemon); }
+
+    .product-name .colon {
+      color: var(--pop);
+      animation: blink 1s step-end infinite;
+      margin: 0 0.04em;
+    }
+
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+    .product-name .word-pop {
+      color: var(--ink);
+      text-shadow: 5px 5px 0 var(--lemon), 10px 10px 0 var(--pop);
+      transition: text-shadow 0.3s ease;
+    }
+
+    .product-name:hover .word-pop { text-shadow: 7px 7px 0 var(--lemon), 13px 13px 0 var(--pop), 17px 17px 0 var(--cyan); }
+
+    .product-name-cn {
+      font-family: var(--font-head);
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      font-weight: 700;
+      margin-top: 0.6rem;
+      letter-spacing: 0.06em;
+    }
+
+    .product-name-cn span { color: var(--pop); position: relative; display: inline-block; }
+    .product-name-cn span::after {
+      content: '';
+      position: absolute;
+      bottom: 0.1em;
+      left: -0.1em;
+      right: -0.1em;
+      height: 0.25em;
+      background: var(--lemon);
+      z-index: -1;
+      transform: skewX(-12deg);
+      border: 2px solid var(--line);
+    }
+
+    .tagline {
+      font-family: var(--font-display);
+      font-size: clamp(2.4rem, 6.5vw, 5rem);
+      line-height: 1;
+      letter-spacing: -0.02em;
+      margin: 2.5rem 0 1.5rem;
+    }
+
+    .tagline .comma {
+      color: var(--pop);
+      display: inline-block;
+      animation: pulse 0.9s ease-in-out infinite;
+    }
+
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+
+    .tagline .alive {
+      display: inline-block;
+      background: var(--pop);
+      color: #fff;
+      padding: 0 0.18em;
+      border: 3px solid var(--line);
+      transform: skew(-7deg);
+      box-shadow: 4px 4px 0 var(--line);
+      animation: alive-bounce 2s ease-in-out infinite;
+    }
+
+    @keyframes alive-bounce { 0%, 100% { transform: skew(-7deg) translateY(0); } 50% { transform: skew(-7deg) translateY(-4px); } }
+
+    .sub-tagline {
+      font-family: var(--font-mono);
+      font-size: clamp(1rem, 1.7vw, 1.35rem);
+      line-height: 1.9;
+      color: var(--ink-2);
+      max-width: 820px;
+      border-left: 5px solid var(--pop);
+      padding-left: 1.1rem;
+    }
+
+    .sub-tagline .line { display: block; }
+    .sub-tagline .slash { color: var(--pop); font-weight: 700; display: inline-block; width: 2em; }
+    .sub-tagline .hi { font-weight: 700; }
+    .sub-tagline .hi.pink { color: var(--pop); }
+    .sub-tagline .hi.cyan { color: #00a8b8; }
+    .sub-tagline .hi.lemon { color: #c4a600; }
+
+    /* ====== SECTION HEADERS ====== */
+    .section-tag {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 5rem 0 1.4rem;
+      flex-wrap: wrap;
+    }
+
+    .section-tag .num {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 7vw, 5rem);
+      line-height: 1;
+      -webkit-text-stroke: 2px var(--line);
+      color: transparent;
+      position: relative;
+    }
+
+    .section-tag .num::before {
+      content: attr(data-num);
+      position: absolute;
+      inset: 0;
+      -webkit-text-stroke: 0;
+      color: var(--c, var(--pop));
+      transform: translate(3px, 3px);
+      z-index: -1;
+    }
+
+    .section-tag .label {
+      font-family: var(--font-pixel);
+      font-size: 0.72rem;
+      letter-spacing: 0.28em;
+      color: var(--muted);
+    }
+
+    .section-tag .bar {
+      flex: 1;
+      height: 5px;
+      background: repeating-linear-gradient(90deg, var(--c, var(--pop)) 0 10px, transparent 10px 18px);
+      min-width: 60px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.4rem, 5.5vw, 4.5rem);
+      line-height: 0.98;
+      letter-spacing: -0.02em;
+      margin-bottom: 2.5rem;
+    }
+
+    .section-title .hi {
+      display: inline-block;
+      background: var(--c, var(--pop));
+      color: var(--ink);
+      padding: 0 0.15em;
+      border: 3px solid var(--line);
+      box-shadow: 4px 4px 0 var(--line);
+      transform: rotate(-1.5deg);
+    }
+
+    .section-sub {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin: -1.5rem 0 2.8rem;
+      max-width: 760px;
+    }
+
+    .section-sub .k { color: var(--pop); font-weight: 700; }
+
+    /* ====== ARCHITECTURE ====== */
+    .arch-wrap {
+      background: var(--bg-2);
+      border: 3px solid var(--line);
+      border-radius: 2px;
+      padding: 2rem 1.5rem;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .arch-bar {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-pixel);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      padding-bottom: 1rem;
+      border-bottom: 2px dashed var(--line);
+      margin-bottom: 1.8rem;
+    }
+
+    .arch-bar .lhs { color: var(--pop); }
+    .arch-bar .rhs { color: var(--cyan); }
+
+    .arch-parallel {
+      display: grid;
+      grid-template-columns: 1fr 180px 1fr;
+      gap: 1.2rem;
+      align-items: stretch;
+    }
+
+    @media (max-width: 960px) {
+      .arch-parallel { grid-template-columns: 1fr; }
+    }
+
+    .arch-lane {
+      border: 2.5px solid var(--line);
+      background: #fff;
+      padding: 1.2rem;
+      position: relative;
+    }
+
+    .arch-lane.warm { box-shadow: 7px 7px 0 var(--pop); }
+    .arch-lane.cool { box-shadow: 7px 7px 0 var(--cyan); }
+
+    .arch-lane-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.7rem;
+      border-bottom: 2px solid var(--line);
+    }
+
+    .arch-lane-title h3 { font-family: var(--font-head); font-size: 1.5rem; }
+    .arch-lane-title span { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); }
+
+    .arch-card {
+      display: flex;
+      gap: 0.9rem;
+      padding: 0.85rem 0;
+      border-bottom: 1px dashed rgba(0,0,0,0.15);
+      transition: transform 0.2s ease;
+    }
+
+    .arch-card:last-child { border-bottom: none; }
+    .arch-card:hover { transform: translateX(5px); }
+
+    .arch-badge {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-display);
+      font-size: 1rem;
+      background: var(--lemon);
+      border: 2px solid var(--line);
+      box-shadow: 2px 2px 0 var(--line);
+      flex-shrink: 0;
+    }
+
+    .arch-word { font-family: var(--font-head); font-size: 1.25rem; font-weight: 700; }
+    .arch-desc { font-size: 0.88rem; color: var(--ink-2); margin: 0.15rem 0; }
+    .arch-note { font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); letter-spacing: 0.05em; }
+
+    .memory-bridge {
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    @media (max-width: 960px) { .memory-bridge { order: -1; padding: 1rem 0; } }
+
+    .memory-core {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, var(--pop), var(--cyan), var(--lemon), var(--pop));
+      border: 3px solid var(--line);
+      display: grid;
+      place-items: center;
+      position: relative;
+      box-shadow: 6px 6px 0 var(--line);
+      animation: spin-slow 16s linear infinite;
+    }
+
+    @keyframes spin-slow { to { transform: rotate(360deg); } }
+
+    .memory-core::before {
+      content: '';
+      position: absolute;
+      inset: 10px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 2px solid var(--line);
+    }
+
+    .memory-core .core-text {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      animation: spin-slow 16s linear infinite reverse;
+    }
+
+    .memory-core .core-label { font-family: var(--font-pixel); font-size: 0.6rem; letter-spacing: 0.2em; }
+    .memory-core .core-cn { font-family: var(--font-head); font-size: 1.6rem; font-weight: 700; }
+
+    .arch-caption {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 2px dashed var(--line);
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .arch-caption .warm-text { color: var(--pop); }
+    .arch-caption .cool-text { color: var(--cyan); }
+
+    /* ====== CAPABILITY GRID ====== */
+    .can-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.2rem;
+    }
+
+    .can {
+      background: #fff;
+      border: 2.5px solid var(--line);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      box-shadow: 5px 5px 0 var(--line);
+    }
+
+    .can:hover {
+      transform: translateY(-6px) rotate(0.5deg);
+      box-shadow: 9px 9px 0 var(--line);
+    }
+
+    .can::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: var(--c, var(--pop));
+    }
+
+    .can-band-top,
+    .can-band-bot {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      padding: 0.5rem 0.8rem;
+      background: #f0f0f0;
+      border-bottom: 2px solid var(--line);
+    }
+
+    .can-band-bot { border-bottom: none; border-top: 2px solid var(--line); background: var(--c, var(--pop)); color: var(--ink); }
+
+    .can-body { padding: 1.2rem 0.9rem; }
+    .can-title { font-family: var(--font-display); font-size: 1.7rem; line-height: 1; }
+    .can-cn { font-family: var(--font-head); font-size: 1.15rem; font-weight: 700; margin: 0.3rem 0 0.6rem; }
+    .can-desc { font-size: 0.88rem; color: var(--ink-2); line-height: 1.5; }
+
+    /* ====== PAIN POINTS ====== */
+    .pain-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) { .pain-grid { grid-template-columns: 1fr; } }
+
+    .pain-left {
+      background: #fff;
+      border: 3px solid var(--line);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+
+    .pain-left .halftone { opacity: 0.1; }
+
+    .pain-stamp {
+      display: inline-block;
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      color: var(--pop);
+      border: 3px solid var(--pop);
+      padding: 0.35rem 0.8rem;
+      transform: rotate(-5deg);
+      margin-bottom: 1.2rem;
+    }
+
+    .pain-headline {
+      font-family: var(--font-head);
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    .pain-headline .strike { text-decoration: line-through; text-decoration-color: var(--pop); text-decoration-thickness: 4px; }
+    .pain-headline .flash { color: var(--pop); animation: flash 1.2s ease-in-out infinite; }
+
+    @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    .pain-body { font-size: 1rem; color: var(--ink-2); line-height: 1.8; }
+    .pain-body strong { color: var(--pop); }
+
+    .pain-right {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .scenario {
+      background: #fff;
+      border: 2.5px solid var(--line);
+      padding: 1.3rem;
+      box-shadow: 5px 5px 0 var(--c, var(--lemon));
+      transition: transform 0.2s ease;
+    }
+
+    .scenario:hover { transform: translateX(8px); }
+
+    .scenario .tag {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 0.6rem;
+    }
+
+    .scenario .quote {
+      font-family: var(--font-head);
+      font-size: clamp(1.2rem, 2.5vw, 1.55rem);
+      font-weight: 700;
+      line-height: 1.35;
+      margin-bottom: 0.7rem;
+    }
+
+    .scenario .meta { font-size: 0.88rem; color: var(--ink-2); line-height: 1.6; }
+    .scenario .meta strong { color: var(--c, var(--pop)); }
+
+    /* ====== FEATURES ====== */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.3rem;
+    }
+
+    @media (max-width: 1000px) { .feature-grid { grid-template-columns: 1fr; } }
+
+    .feat {
+      background: #fff;
+      border: 3px solid var(--line);
+      padding: 1.6rem;
+      box-shadow: var(--shadow);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .feat::after {
+      content: '';
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 40px;
+      height: 40px;
+      background: var(--c, var(--pop));
+      opacity: 0.2;
+      border-radius: 50%;
+    }
+
+    .feat-num {
+      font-family: var(--font-display);
+      font-size: 2.8rem;
+      line-height: 1;
+      color: var(--c, var(--pop));
+      opacity: 0.35;
+      position: absolute;
+      top: 0.8rem;
+      left: 1rem;
+    }
+
+    .feat-tag {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+      margin-top: 3rem;
+    }
+
+    .feat-title { font-family: var(--font-head); font-size: 1.9rem; font-weight: 700; line-height: 1.1; }
+    .feat-title-en { font-family: var(--font-mono); font-size: 0.72rem; color: var(--c, var(--pop)); letter-spacing: 0.1em; margin-bottom: 1rem; }
+    .feat-desc { font-size: 0.95rem; color: var(--ink-2); line-height: 1.7; margin-bottom: 1rem; flex: 1; }
+
+    .feat-stack {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      background: #f5f5f5;
+      border-left: 3px solid var(--c, var(--pop));
+    }
+
+    .feat-snippet {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      line-height: 1.65;
+      background: var(--code-bg);
+      color: #e8e8e8;
+      padding: 1rem;
+      border: 2px solid var(--line);
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .feat-snippet .cm { color: #7d8590; }
+    .feat-snippet .ok { color: var(--mint); }
+    .feat-snippet .bb { color: var(--cyan); font-weight: 700; }
+    .feat-snippet .gn { color: var(--mint); }
+    .feat-snippet .pp { color: var(--pop); font-weight: 700; }
+    .feat-snippet .gg { color: var(--lemon); }
+    .feat-snippet .vi { color: var(--violet); }
+    .feat-snippet .pr { color: var(--cyan); font-weight: 700; }
+
+    /* ====== USE CASES ====== */
+    .case-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 860px) { .case-wrap { grid-template-columns: 1fr; } }
+
+    .case {
+      background: #fff;
+      border: 3px solid var(--line);
+      padding: 1.6rem;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .case-head {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      margin-bottom: 1.2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--line);
+    }
+
+    .case-icon {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      background: var(--c, var(--pop));
+      border: 2px solid var(--line);
+      box-shadow: 3px 3px 0 var(--line);
+      flex-shrink: 0;
+    }
+
+    .case-tag { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.12em; color: var(--muted); }
+    .case-title { font-family: var(--font-head); font-size: 1.5rem; font-weight: 700; line-height: 1.1; }
+
+    .case-quote {
+      font-family: var(--font-head);
+      font-size: 1.25rem;
+      font-weight: 700;
+      line-height: 1.4;
+      margin-bottom: 1rem;
+      padding-left: 1rem;
+      border-left: 4px solid var(--c, var(--pop));
+    }
+
+    .case-flow {
+      list-style: none;
+      counter-reset: step;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .case-flow li {
+      position: relative;
+      padding-left: 2.2rem;
+      font-size: 0.92rem;
+      color: var(--ink-2);
+      line-height: 1.5;
+    }
+
+    .case-flow li::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      background: #f0f0f0;
+      border: 1.5px solid var(--line);
+    }
+
+    .case-flow li.hot::before { background: var(--c, var(--pop)); color: #fff; }
+
+    .case-result {
+      background: #f7f7f7;
+      border: 2px solid var(--line);
+      padding: 0.9rem 1rem;
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .case-result .lbl {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+
+    .case-result strong { color: var(--c, var(--pop)); font-size: 1.1em; }
+
+    /* ====== CTA ====== */
+    .cta {
+      margin-top: 5rem;
+      background: var(--lemon);
+      border: 3px solid var(--line);
+      padding: 3.5rem 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .cta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(45deg, transparent, transparent 15px, rgba(0,0,0,0.06) 15px, rgba(0,0,0,0.06) 30px);
+      pointer-events: none;
+    }
+
+    .cta-mini {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      margin-bottom: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.2rem, 6vw, 4.5rem);
+      line-height: 1.05;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-title .b { color: var(--pop); }
+    .cta-title .y { background: #fff; padding: 0 0.1em; border: 3px solid var(--line); transform: skew(-5deg); display: inline-block; }
+    .cta-title .p { color: var(--pop); }
+
+    .cta-cmd {
+      display: inline-block;
+      text-align: left;
+      font-family: var(--font-mono);
+      font-size: clamp(0.8rem, 1.5vw, 1rem);
+      background: var(--code-bg);
+      color: #e8e8e8;
+      padding: 1.2rem 1.5rem;
+      border: 3px solid var(--line);
+      box-shadow: 7px 7px 0 var(--line);
+      position: relative;
+      z-index: 1;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    .cta-cmd .cmd-line { display: block; line-height: 1.8; }
+    .cta-cmd .prompt { color: var(--pop); font-weight: 700; margin-right: 0.5em; }
+    .cta-cmd .cmd-comment { color: #7d8590; display: block; margin-bottom: 0.4rem; }
+
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-top: 1.8rem;
+      background: var(--pop);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.05em;
+      padding: 0.95rem 1.8rem;
+      border: 3px solid var(--line);
+      box-shadow: 5px 5px 0 var(--line);
+      text-decoration: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-btn:hover { transform: translate(-3px, -3px); box-shadow: 8px 8px 0 var(--line); }
+    .cta-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+    /* ====== FOOTER ====== */
+    .foot {
+      margin-top: 4rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    .warhol-can {
+      width: 48px;
+      height: 70px;
+      background: linear-gradient(90deg, var(--pop) 0 20%, var(--cyan) 20% 40%, var(--lemon) 40% 60%, var(--mint) 60% 80%, var(--violet) 80%);
+      border: 2px solid var(--line);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      font-size: 0.5rem;
+      font-weight: 700;
+      color: var(--ink);
+      box-shadow: 3px 3px 0 var(--line);
+      transform: rotate(3deg);
+    }
+
+    .icp-line {
+      text-align: center;
+      margin-top: 1.2rem;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    /* ====== SCROLL REVEAL ====== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.in { opacity: 1; transform: translateY(0); }
+
+    /* ====== FLOATING STICKERS ====== */
+    .sticker {
+      position: fixed;
+      z-index: 50;
+      pointer-events: none;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.4rem 0.7rem;
+      border: 2px solid var(--line);
+      box-shadow: 3px 3px 0 var(--line);
+      transform: rotate(var(--sr, -12deg));
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .sticker.s1 { top: 25%; left: 3%; background: var(--lemon); --sr: -12deg; }
+    .sticker.s2 { top: 45%; right: 3%; background: var(--cyan); --sr: 8deg; }
+    .sticker.s3 { top: 70%; left: 4%; background: var(--mint); --sr: -6deg; }
+
+    @media (max-width: 1100px) { .sticker { display: none; } }
+
+    /* ====== CURSOR ====== */
+    .cursor-dot {
+      position: fixed;
+      width: 14px;
+      height: 14px;
+      background: var(--pop);
+      border: 2px solid var(--line);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: width 0.15s, height 0.15s, background 0.15s;
+      mix-blend-mode: multiply;
+    }
+
+    .cursor-ring {
+      position: fixed;
+      width: 38px;
+      height: 38px;
+      border: 2px solid var(--line);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, border-color 0.2s;
+    }
+
+    @media (pointer: coarse) { .cursor-dot, .cursor-ring { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="texture"></div>
+  <div class="cursor-dot" aria-hidden="true"></div>
+  <div class="cursor-ring" aria-hidden="true"></div>
+  <div class="sticker s1">LIVE INDEX</div>
+  <div class="sticker s2">SEMANTIC</div>
+  <div class="sticker s3">LOCAL FIRST</div>
+
+  <nav class="top-nav">
+    <a href="#" class="nav-logo">Code:Pop</a>
+    <button class="nav-toggle" aria-label="打开导航" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links">
+      <a href="#hero" class="active">首页</a>
+      <a href="#arch">架构</a>
+      <a href="#caps">能力</a>
+      <a href="#features">功能</a>
+      <a href="https://github.com/ilyuve/code-pop" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </nav>
+
+  <div class="ticker">
+    <div class="ticker-track">
+      <span>★ CODE:POP / 代码波普</span><span class="dot">●</span>
+      <span>LOCAL AI CODE MEMORY</span><span class="dot">●</span>
+      <span>让代码真正活着</span><span class="dot">●</span>
+      <span>SEMANTIC RECALL · INCREMENTAL INDEX</span><span class="dot">●</span>
+      <span>★ CODE:POP / 代码波普</span><span class="dot">●</span>
+      <span>LOCAL AI CODE MEMORY</span><span class="dot">●</span>
+      <span>让代码真正活着</span><span class="dot">●</span>
+      <span>SEMANTIC RECALL · INCREMENTAL INDEX</span><span class="dot">●</span>
+    </div>
+  </div>
+
+  <article class="page">
+    <section class="hero" id="hero">
+      <div class="hero-meta">
+        <span>ISSUE №01 / VOL.POP / 2026.06</span>
+        <span class="stamp">CONCEPT PROPOSAL</span>
+        <span>CODE / NET WT. ∞</span>
+      </div>
+      <div class="badge-line">
+        <span class="badge pink">LOCAL · AI</span>
+        <span class="badge cyan">MCP SERVER</span>
+        <span class="badge lemon">VECTOR DB</span>
+        <span class="badge mint">SEMANTIC</span>
+      </div>
+      <h1 class="product-name">
+        <span class="word-code">Code</span><span class="colon">:</span><span class="word-pop">Pop</span>
+      </h1>
+      <div class="product-name-cn">代码<span>波普</span></div>
+      <h2 class="tagline">让代码<span class="comma">,</span> 真正<span class="alive">活着</span>。</h2>
+      <p class="sub-tagline">
+        <span class="line"><span class="slash">//</span>通过 MCP 协议接入 Claude Code、Cursor 等 AI 工具</span>
+        <span class="line"><span class="slash">//</span>每写一行，记忆就长一寸——<span class="hi pink">你的代码库会呼吸</span></span>
+        <span class="line"><span class="slash">//</span>说你的需求，它把<span class="hi cyan">上下游一起找来</span></span>
+        <span class="line"><span class="slash">//</span>私有化部署，数据留在<span class="hi lemon">你的世界</span></span>
+      </p>
+    </section>
+
+    <div class="section-tag reveal" id="arch" style="--c: var(--pop)">
+      <span class="num" data-num="01">01</span>
+      <span class="label">PRODUCT ARCHITECTURE / 技术框架</span>
+      <span class="bar"></span>
+    </div>
+    <h2 class="section-title reveal">代码被记住<span class="hi">问题被唤醒</span>。</h2>
+    <p class="section-sub reveal">// 左边是 <span class="k">代码如何活着</span>，右边是 <span class="k">开发者如何提问</span>，中间的记忆库把两者连接起来。</p>
+
+    <section class="arch-wrap reveal">
+      <div class="halftone"></div>
+      <div class="arch-bar">
+        <span class="lhs">▶ CODE ALIVE</span>
+        <span>CODE:POP / MEMORY BRIDGE</span>
+        <span class="rhs">DEV QUERY ▶</span>
+      </div>
+      <div class="arch-parallel">
+        <div class="arch-lane warm">
+          <div class="arch-lane-title"><h3>代码如何活着</h3><span>Code Alive</span></div>
+          <div class="arch-steps">
+            <div class="arch-card"><div class="arch-badge">1</div><div><div class="arch-word">摄入</div><div class="arch-desc">代码库接入，把沉睡的文件带进记忆系统。</div><div class="arch-note">Repository Intake</div></div></div>
+            <div class="arch-card"><div class="arch-badge">2</div><div><div class="arch-word">解析</div><div class="arch-desc">按语义切分，让代码从文件里跳出来。</div><div class="arch-note">Semantic Chunking</div></div></div>
+            <div class="arch-card"><div class="arch-badge">3</div><div><div class="arch-word">记忆</div><div class="arch-desc">把代码片段转化为可被理解和召回的记忆。</div><div class="arch-note">Memory Encoding</div></div></div>
+            <div class="arch-card"><div class="arch-badge">4</div><div><div class="arch-word">呼吸</div><div class="arch-desc">变更即更新，代码保存后记忆持续生长。</div><div class="arch-note">Living Update</div></div></div>
+          </div>
+        </div>
+        <div class="memory-bridge">
+          <div class="memory-core">
+            <div class="core-text">
+              <div class="core-label">MEMORY</div>
+              <div class="core-cn">记忆库</div>
+            </div>
+          </div>
+        </div>
+        <div class="arch-lane cool">
+          <div class="arch-lane-title"><h3>开发者如何提问</h3><span>Dev Query</span></div>
+          <div class="arch-steps">
+            <div class="arch-card"><div class="arch-badge">1</div><div><div class="arch-word">提问</div><div class="arch-desc">用自然语言描述意图，不必记住函数名。</div><div class="arch-note">Natural Language</div></div></div>
+            <div class="arch-card"><div class="arch-badge">2</div><div><div class="arch-word">理解</div><div class="arch-desc">匹配语义而非关键词，从功能意图出发。</div><div class="arch-note">Semantic Matching</div></div></div>
+            <div class="arch-card"><div class="arch-badge">3</div><div><div class="arch-word">召回</div><div class="arch-desc">从记忆库中定位相关片段和隐藏关联。</div><div class="arch-note">Context Recall</div></div></div>
+            <div class="arch-card"><div class="arch-badge">4</div><div><div class="arch-word">答案</div><div class="arch-desc">返回位置、上下文，以及跨文件关联链路。</div><div class="arch-note">Answer With Context</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="arch-caption">
+        <span class="warm-text">左线：代码被摄入、解析、记住，并随变更持续呼吸。</span>
+        <span class="mid-text">MEMORY BRIDGE</span>
+        <span class="cool-text">右线：开发者用自然语言提问，记忆库把答案召回。</span>
+      </div>
+    </section>
+
+    <div class="section-tag reveal" id="caps" style="--c: var(--cyan)">
+      <span class="num" data-num="02">02</span>
+      <span class="label">CAPABILITY MATRIX / 产品能力矩阵</span>
+      <span class="bar"></span>
+    </div>
+    <h2 class="section-title reveal">8 项能力 · <span class="hi">同时呼吸</span>。</h2>
+    <p class="section-sub reveal">// 每一格都是 <span class="k">真实可落地</span> 的产品能力，不是抽象口号。</p>
+
+    <section class="can-grid reveal">
+      <div class="can" style="--c: var(--pop)"><div class="can-band-top"><span>★ 01</span><span>PARSE</span></div><div class="can-body"><div class="can-title">PARSE</div><div class="can-cn">代码解析</div><div class="can-desc">tree-sitter 拆解代码结构，精准识别函数、类、方法边界</div></div><div class="can-band-bot">PY · JAVA · GO · TS</div></div>
+      <div class="can" style="--c: var(--cyan)"><div class="can-band-top"><span>★ 02</span><span>VECTOR</span></div><div class="can-body"><div class="can-title">VECTOR</div><div class="can-cn">向量化</div><div class="can-desc">BAAI/bge-m3 生成 1024 维向量，保留语义而非字面</div></div><div class="can-band-bot">BGE-M3 1024D</div></div>
+      <div class="can" style="--c: var(--lemon)"><div class="can-band-top"><span>★ 03</span><span>MCP</span></div><div class="can-body"><div class="can-title">MCP</div><div class="can-cn">AI 接入</div><div class="can-desc">Claude Code、Cursor 直接查询你的私有代码库</div></div><div class="can-band-bot">IDE NATIVE</div></div>
+      <div class="can" style="--c: var(--mint)"><div class="can-band-top"><span>★ 04</span><span>SEARCH</span></div><div class="can-body"><div class="can-title">SEARCH</div><div class="can-cn">语义检索</div><div class="can-desc">说人话提问，代码自己跳出来</div></div><div class="can-band-bot">NL → CODE</div></div>
+      <div class="can" style="--c: var(--tangerine)"><div class="can-band-top"><span>★ 05</span><span>RECALL</span></div><div class="can-body"><div class="can-title">RECALL</div><div class="can-cn">四路召回</div><div class="can-desc">AST + 向量 + BM25 + 编辑距离，确保不遗漏</div></div><div class="can-band-bot">4-WAY RECALL</div></div>
+      <div class="can" style="--c: var(--violet)"><div class="can-band-top"><span>★ 06</span><span>ADMIN</span></div><div class="can-body"><div class="can-title">ADMIN</div><div class="can-cn">管理后台</div><div class="can-desc">Web 界面查看索引状态、Token 消耗、查询日志</div></div><div class="can-band-bot">DASHBOARD</div></div>
+      <div class="can" style="--c: var(--pop)"><div class="can-band-top"><span>★ 07</span><span>ALIVE</span></div><div class="can-body"><div class="can-title">ALIVE</div><div class="can-cn">实时索引</div><div class="can-desc">Git 提交自动触发索引更新，代码库时刻同步</div></div><div class="can-band-bot">PUSH → INDEX</div></div>
+      <div class="can" style="--c: var(--cyan)"><div class="can-band-top"><span>★ 08</span><span>LOCAL</span></div><div class="can-body"><div class="can-title">LOCAL</div><div class="can-cn">本地运行</div><div class="can-desc">数据留在本机，不上传云端</div></div><div class="can-band-bot">100% ON-DEVICE</div></div>
+    </section>
+
+    <div class="section-tag reveal" style="--c: var(--lemon)">
+      <span class="num" data-num="03">03</span>
+      <span class="label">REAL PAIN / 真实场景痛点</span>
+      <span class="bar"></span>
+    </div>
+    <h2 class="section-title reveal">代码不死，但<span class="hi">没人记得</span>它在哪。</h2>
+    <p class="section-sub reveal">// 当 AI 也读不懂你的私有代码库，<span class="k">grep 不到、token 烧光、调用链断裂</span> 就成了日常。</p>
+
+    <section class="pain-grid reveal">
+      <div class="pain-left">
+        <div class="halftone"></div>
+        <div class="pain-stamp">R.I.P. CONTEXT</div>
+        <h3 class="pain-headline">硬塞 AI 读全部代码，<br><span class="strike">优雅</span> 又 <span class="flash">烧钱</span>。</h3>
+        <p class="pain-body">通用 LLM 不认识你的私有代码库——它没读过你的 <strong>utils/</strong>，也不知道你三年前在 <strong>legacy/</strong> 里写过的状态机。<br><br>于是大家被迫做三件蠢事：<br>① 把整个 repo 灌进 context window，token 哗哗地烧；<br>② 用 grep 大海捞针，搜得到字符串、搜不到语义；<br>③ 改一个上游字段，赌下游不会崩。<br><br><strong>Code:Pop</strong> 让你的代码库，先变成一座本地、可被语义检索的"活字典"。</p>
+      </div>
+      <div class="pain-right">
+        <div class="scenario" style="--c: var(--pop)">
+          <span class="tag">SCENARIO 01 / TOKEN 黑洞</span>
+          <div class="quote">"AI 硬读代码库，Token 烧了 <strong>¥5万</strong>，还没找到关键关联。"</div>
+          <div class="meta">◆ 30 万行 monorepo · 全量塞 context<br>◆ 5 轮迭代后 <strong>仍漏掉跨服务调用</strong></div>
+        </div>
+        <div class="scenario" style="--c: var(--cyan)">
+          <span class="tag">SCENARIO 02 / GREP 失忆</span>
+          <div class="quote">"grep <strong>搜不到语义</strong>，只记得功能，不记得函数名。"</div>
+          <div class="meta">◆ 想找"超时重试" · 但写的是 <strong>backoffWrapper</strong><br>◆ 翻 12 个 commit 也想不起来</div>
+        </div>
+        <div class="scenario" style="--c: var(--lemon)">
+          <span class="tag">SCENARIO 03 / 调用链断裂</span>
+          <div class="quote">"改了上游字段，下游 <strong>三个服务崩了</strong>，没人记得调用链。"</div>
+          <div class="meta">◆ user.id → int 改 string<br>◆ <strong>3 个微服务连锁报错</strong> · 凌晨 3 点回滚</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-tag reveal" id="features" style="--c: var(--mint)">
+      <span class="num" data-num="04">04</span>
+      <span class="label">CORE FEATURES × 3 / 三大核心功能</span>
+      <span class="bar"></span>
+    </div>
+    <h2 class="section-title reveal">让代码库，<span class="hi">持续生长</span>。</h2>
+    <p class="section-sub reveal">// 三个能力共同构成 Code:Pop 的"<span class="k">代码神经系统</span>"——索引、检索、自愈。</p>
+
+    <section class="feature-grid reveal">
+      <div class="feat" style="--c: var(--pop)">
+        <div class="feat-num">01</div>
+        <div class="feat-tag">FEATURE / 实时</div>
+        <h3 class="feat-title">实时索引</h3>
+        <div class="feat-title-en">REAL-TIME INDEXING</div>
+        <p class="feat-desc">基于 <strong>tree-sitter AST</strong> 解析，函数级切片精准提取代码语义单元，<strong>毫秒级写入 PostgreSQL + pgvector</strong>。Git 提交自动触发索引更新，工作流零打扰。</p>
+        <div class="feat-stack">▸ STACK: FastAPI · tree-sitter · BAAI/bge-m3 · PostgreSQL + pgvector</div>
+        <pre class="feat-snippet"><span class="cm">$ git clone https://github.com/ilyuve/code-pop.git</span>
+<span class="cm">$ cd code-pop && docker compose up -d</span>
+
+<span class="ok">✓</span> initial scan: 1,247 files / 41,892 chunks
+<span class="ok">✓</span> embedding model: <span class="bb">BAAI/bge-m3</span>
+<span class="ok">✓</span> vector store: <span class="bb">PostgreSQL + pgvector</span>
+
+<span class="cm"># Git push 自动触发</span>
+[<span class="gn">12:04:31</span>] <span class="pp">PUSH</span>  src/auth/jwt.go
+       └─ parse_ast() <span class="gg">→</span> 3 chunks
+       └─ embed() <span class="gg">→</span> 1024-dim
+       └─ <span class="ok">✓ store()</span> in <span class="vi">23ms</span></pre>
+      </div>
+      <div class="feat" style="--c: var(--cyan)">
+        <div class="feat-num">02</div>
+        <div class="feat-tag">FEATURE / 语义</div>
+        <h3 class="feat-title">语义检索</h3>
+        <div class="feat-title-en">SEMANTIC SEARCH</div>
+        <p class="feat-desc"><strong>BAAI/bge-m3 嵌入模型</strong> 把代码与查询编码到同一向量空间，理解<strong>代码语义</strong>而非关键词匹配。忘了函数名也能找回来。</p>
+        <div class="feat-stack">▸ STACK: bge-m3 (1024d) · cosine · top-k=5 · re-rank</div>
+        <pre class="feat-snippet"><span class="pr">codepop&gt;</span> ask <span class="gg">"用户登录的 JWT 验证"</span>
+
+<span class="cm"># vectorize query → cosine search</span>
+<span class="cm">→ found 3 matches in 87ms:</span>
+
+  <span class="bb">★ 0.94</span>  src/auth/<span class="gn">jwt_verify.go</span>:42
+        <span class="cm">// validate token signature ...</span>
+  <span class="bb">★ 0.91</span>  api/middleware/<span class="gn">auth.go</span>:18
+        <span class="cm">// extract Bearer token ...</span>
+  <span class="bb">★ 0.87</span>  legacy/login/<span class="gn">handler.py</span>:7
+        <span class="cm">// decode_jwt(token) ...</span></pre>
+      </div>
+      <div class="feat" style="--c: var(--lemon)">
+        <div class="feat-num">03</div>
+        <div class="feat-tag">FEATURE / 增量</div>
+        <h3 class="feat-title">增量更新</h3>
+        <div class="feat-title-en">INCREMENTAL UPDATE</div>
+        <p class="feat-desc"><strong>GitHub Webhook + 本地 git 监听</strong> 双引擎，只重新索引<strong>变更的代码块</strong>，不全量扫描。每一次 push 都让记忆悄悄长大。</p>
+        <div class="feat-stack">▸ STACK: GitHub Webhook · git diff · delta-chunking · pgvector</div>
+        <pre class="feat-snippet"><span class="cm">$ git push origin main</span>
+<span class="cm"># GitHub Webhook → codepop sync</span>
+
+<span class="pp">▸</span> diff vs HEAD~1:
+   <span class="ok">+</span>  src/auth/oauth2.go     <span class="gn">[+12 chunks]</span>
+   <span class="vi">~</span>  src/auth/jwt.go        <span class="gn">[~3 chunks]</span>
+   <span class="pp">-</span>  legacy/auth_old.py     <span class="gn">[-1 chunk]</span>
+
+<span class="ok">✓</span> delta indexed in <span class="vi">142ms</span>
+<span class="ok">✓</span> total alive: <span class="bb">41,903 chunks</span></pre>
+      </div>
+    </section>
+
+    <div class="section-tag reveal" style="--c: var(--tangerine)">
+      <span class="num" data-num="05">05</span>
+      <span class="label">USE CASES × 2 / 典型场景</span>
+      <span class="bar"></span>
+    </div>
+    <h2 class="section-title reveal">两种人，<span class="hi">同一种解药</span>。</h2>
+    <p class="section-sub reveal">// 个人开发者找回旧代码，团队新人秒懂老项目。</p>
+
+    <section class="case-wrap reveal">
+      <div class="case" style="--c: var(--pop)">
+        <div class="case-head">
+          <div class="case-icon">A</div>
+          <div>
+            <div class="case-tag">SCENARIO 01 / SOLO DEVELOPER</div>
+            <h3 class="case-title">独立开发者 · 找回旧物</h3>
+          </div>
+        </div>
+        <div class="case-quote">"我两年前肯定写过<span style="color:var(--pop)">一个限流算法</span>，就是想不起来在哪了。"</div>
+        <ol class="case-flow">
+          <li>打开 Code:Pop 索引全部本地 repo</li>
+          <li class="hot">问："令牌桶限流的实现"</li>
+          <li>跨 12 个项目语义匹配 (cosine ≥ 0.85)</li>
+          <li>0.3 秒返回 4 段相关代码 + 调用上下文</li>
+          <li class="hot">复制 → 改 2 行参数 → 直接用上</li>
+        </ol>
+        <div class="case-result"><span class="lbl">RESULT / 实测对比</span>从"重新写一遍 <strong>90 分钟</strong>"<br>压缩到 <strong>"找回 + 改造 = 6 分钟"</strong></div>
+      </div>
+      <div class="case" style="--c: var(--cyan)">
+        <div class="case-head">
+          <div class="case-icon">B</div>
+          <div>
+            <div class="case-tag">SCENARIO 02 / NEW TEAM MEMBER</div>
+            <h3 class="case-title">团队新人 · 拆解老项目</h3>
+          </div>
+        </div>
+        <div class="case-quote">"三十万行的祖传代码，<span style="color:var(--cyan)">从哪开始读?</span>"</div>
+        <ol class="case-flow">
+          <li>新人 clone → Code:Pop 自动 ingest 索引</li>
+          <li class="hot">问："用户登录的完整链路"</li>
+          <li>跨 controller / service / dao 串联返回</li>
+          <li>系统自动列出函数调用关系图</li>
+          <li class="hot">问："鉴权方式" → 秒级答案 + 出处</li>
+        </ol>
+        <div class="case-result"><span class="lbl">RESULT / 实测对比</span>从"上手要 <strong>1 个月</strong>"<br>压缩到 <strong>"第 3 天独立改 bug"</strong></div>
+      </div>
+    </section>
+
+    <section class="cta reveal">
+      <div class="cta-mini">▼ TRY IT NOW · POP IT OPEN ▼</div>
+      <h2 class="cta-title">代码不是<span class="b">死的</span>，<br>是没人<span class="y">叫醒</span>它。<br><span class="p">Code:Pop</span> — 让它<span class="y">跳</span>出来。</h2>
+      <div class="cta-cmd">
+        <span class="cmd-line"><span class="cmd-comment">Docker Compose 一键启动</span></span>
+        <span class="cmd-line"><span class="prompt">$</span>git clone https://github.com/ilyuve/code-pop.git</span>
+        <span class="cmd-line"><span class="prompt">$</span>cd code-pop</span>
+        <span class="cmd-line"><span class="prompt">$</span>docker compose up -d        <span class="cmd-comment"># 启动服务</span></span>
+      </div>
+      <a href="https://github.com/ilyuve/code-pop" target="_blank" rel="noopener" class="cta-btn">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        在 GitHub 上查看
+      </a>
+    </section>
+
+    <footer class="foot">
+      <span>© 2026 CODE:POP STUDIO</span>
+      <span>● ● ●</span>
+      <span class="warhol-can">CODE<br>SOUP</span>
+      <span>● ● ●</span>
+      <span>POP. ART. CODE. ALIVE.</span>
+    </footer>
+    <div class="icp-line">京ICP备2026012277号-2</div>
+  </article>
+
+  <script>
+    // Mobile nav toggle
+    const toggle = document.querySelector('.nav-toggle');
+    const links = document.querySelector('.nav-links');
+    toggle.addEventListener('click', () => {
+      const open = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', open);
+    });
+
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('in'), i % 3 * 100);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    reveals.forEach(el => observer.observe(el));
+
+    // Floating stickers fade in
+    setTimeout(() => {
+      document.querySelectorAll('.sticker').forEach((s, i) => {
+        setTimeout(() => s.style.opacity = '0.85', i * 300);
+      });
+    }, 800);
+
+    // Custom cursor
+    const dot = document.querySelector('.cursor-dot');
+    const ring = document.querySelector('.cursor-ring');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+
+    document.addEventListener('mousemove', (e) => {
+      mx = e.clientX;
+      my = e.clientY;
+      dot.style.left = mx + 'px';
+      dot.style.top = my + 'px';
+    });
+
+    function animateRing() {
+      rx += (mx - rx) * 0.12;
+      ry += (my - ry) * 0.12;
+      ring.style.left = rx + 'px';
+      ring.style.top = ry + 'px';
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    document.querySelectorAll('a, button, .can, .scenario, .arch-card').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        dot.style.width = '22px';
+        dot.style.height = '22px';
+        dot.style.background = 'var(--cyan)';
+        ring.style.width = '50px';
+        ring.style.height = '50px';
+        ring.style.borderColor = 'var(--pop)';
+      });
+      el.addEventListener('mouseleave', () => {
+        dot.style.width = '14px';
+        dot.style.height = '14px';
+        dot.style.background = 'var(--pop)';
+        ring.style.width = '38px';
+        ring.style.height = '38px';
+        ring.style.borderColor = 'var(--line)';
+      });
+    });
+
+    // Respect reduced motion
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll('.ticker-track, .memory-core, .tagline .alive, .product-name .colon').forEach(el => {
+        el.style.animation = 'none';
+      });
+    }
+  </script>
+</body>
+</html>
