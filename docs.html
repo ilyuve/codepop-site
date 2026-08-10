@@ -69,18 +69,26 @@ $ docker compose up -d</code></pre>
       <h2><span class="step-badge">03</span>MCP 接入 AI 工具</h2>
 
       <h3>Claude Code</h3>
-      <p>在 Claude Code 的 MCP 配置中添加（通过 SSE 客户端转发到 CodePop 后端，请将 <code>18080</code> 换成你的实际端口）：</p>
+      <p>在 Claude Code 的 MCP 配置中添加（原生 Streamable HTTP 直连，无需 npx 转发，请将 <code>18080</code> 换成你的实际端口）：</p>
       <pre class="code-block"><code>{
   "mcpServers": {
     "codepop": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sse@latest", "http://localhost:18080/mcp/sse"]
+      "type": "http",
+      "url": "http://localhost:18080/mcp/sse"
     }
   }
 }</code></pre>
 
       <h3>Cursor</h3>
-      <p>Cursor <strong>Settings → MCP → Add Server</strong>，选择 SSE 类型，URL 填写 <code>http://localhost:18080/mcp/sse</code>（端口按你的部署调整）。</p>
+      <p>Cursor <strong>Settings → MCP → Add Server</strong>，选择 <strong>HTTP</strong> 类型，URL 填写 <code>http://localhost:18080/mcp/sse</code>（端口按你的部署调整）。或写入项目根目录 <code>.cursor/mcp.json</code>：</p>
+      <pre class="code-block"><code>{
+  "mcpServers": {
+    "codepop": {
+      "type": "http",
+      "url": "http://localhost:18080/mcp/sse"
+    }
+  }
+}</code></pre>
 
       <h3>使用方式</h3>
       <p>接入后直接在 AI 对话中输入：</p>
