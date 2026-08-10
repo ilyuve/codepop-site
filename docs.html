@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>使用教程 - Code:Pop</title>
-  <meta name="description" content="Code:Pop 使用教程：5 分钟通过 Docker Compose 启动，配置 GitHub Webhook、MCP 接入 Claude Code / Cursor，理解四路召回原理。">
+  <meta name="description" content="Code:Pop 使用教程：5 分钟通过 Docker Compose 启动，配置 GitHub Webhook、MCP 接入 Claude Code / Cursor，理解多路召回原理。">
   <meta name="theme-color" content="#F5F5F0">
   <meta property="og:title" content="使用教程 - Code:Pop">
-  <meta property="og:description" content="5 分钟跑起来 · MCP 接入 · 四路召回 · GitHub Webhook 自动索引">
+  <meta property="og:description" content="5 分钟跑起来 · MCP 接入 · 多路召回 · GitHub Webhook 自动索引">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23ff3d8a'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/fonts.css">
   <link rel="stylesheet" href="css/main.css">
@@ -30,10 +30,10 @@
     <div class="ticker-track">
       <span>★ CODE:POP / DOCS</span><span class="dot">●</span>
       <span>5 MINUTES TO POP</span><span class="dot">●</span>
-      <span>MCP · WEBHOOK · 4-WAY RECALL</span><span class="dot">●</span>
+      <span>MCP · WEBHOOK · 5-WAY RECALL</span><span class="dot">●</span>
       <span>★ CODE:POP / DOCS</span><span class="dot">●</span>
       <span>5 MINUTES TO POP</span><span class="dot">●</span>
-      <span>MCP · WEBHOOK · 4-WAY RECALL</span><span class="dot">●</span>
+      <span>MCP · WEBHOOK · 5-WAY RECALL</span><span class="dot">●</span>
     </div>
   </div>
 
@@ -48,7 +48,7 @@
       <pre class="code-block"><code>$ git clone https://github.com/ilyuve/code-pop.git
 $ cd code-pop
 $ docker compose up -d</code></pre>
-      <p>等待服务启动，访问 <code>http://localhost:3000</code> 打开管理后台。</p>
+      <p>等待服务启动，访问 <code>http://localhost:13000</code> 打开管理后台（Docker Compose 将 Web 容器内 3000 端口映射到宿主机 13000）。</p>
     </section>
 
     <section class="doc-section">
@@ -56,30 +56,31 @@ $ docker compose up -d</code></pre>
       <p>进入 GitHub 仓库 <strong>Settings → Webhooks → Add webhook</strong></p>
       <table class="env-table">
         <tr><th>配置项</th><th>值</th></tr>
-        <tr><td>Payload URL</td><td><code>http://你的服务器:8080/webhook/github</code></td></tr>
+        <tr><td>Payload URL</td><td><code>http://你的服务器:18080/webhook/github</code></td></tr>
         <tr><td>Content type</td><td><code>application/json</code></td></tr>
         <tr><td>Secret</td><td>与 <code>.env</code> 里的 <code>GITHUB_WEBHOOK_SECRET</code> 一致</td></tr>
         <tr><td>Events</td><td>选 <code>Push</code></td></tr>
       </table>
       <p>配置完成后，每次 push 代码会自动触发索引更新。</p>
+      <p class="demo-note">端口说明：Docker Compose 默认将后端容器内 8080 映射到宿主机 18080；若你的部署方式为 8080 直通，则使用 <code>:8080</code>。</p>
     </section>
 
     <section class="doc-section">
       <h2><span class="step-badge">03</span>MCP 接入 AI 工具</h2>
 
       <h3>Claude Code</h3>
-      <p>在 Claude Code 的 MCP 配置中添加：</p>
+      <p>在 Claude Code 的 MCP 配置中添加（通过 SSE 客户端转发到 CodePop 后端，请将 <code>18080</code> 换成你的实际端口）：</p>
       <pre class="code-block"><code>{
   "mcpServers": {
     "codepop": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-codepop"]
+      "args": ["-y", "@modelcontextprotocol/server-sse@latest", "http://localhost:18080/mcp/sse"]
     }
   }
 }</code></pre>
 
       <h3>Cursor</h3>
-      <p>Cursor <strong>Settings → MCP → Add Server</strong>，填写 CodePop 的 SSE endpoint。</p>
+      <p>Cursor <strong>Settings → MCP → Add Server</strong>，选择 SSE 类型，URL 填写 <code>http://localhost:18080/mcp/sse</code>（端口按你的部署调整）。</p>
 
       <h3>使用方式</h3>
       <p>接入后直接在 AI 对话中输入：</p>
@@ -89,12 +90,12 @@ $ docker compose up -d</code></pre>
     </section>
 
     <section class="doc-section">
-      <h2><span class="step-badge">04</span>核心概念：四路召回</h2>
-      <p>CodePop 同时用四种方式检索代码，确保不遗漏：</p>
+      <h2><span class="step-badge">04</span>核心概念：多路召回</h2>
+      <p>CodePop 同时用五种方式检索代码，再经 RRF 融合 + 重排确保不遗漏：</p>
       <div class="recall-grid">
         <div class="recall-item">
-          <h4>AST 结构检索</h4>
-          <p>通过 tree-sitter 解析代码结构，按函数、类、方法精准定位。</p>
+          <h4>符号检索（AST）</h4>
+          <p>解析代码结构，按函数、类、方法精准定位，忘了名字也能按结构找到。</p>
         </div>
         <div class="recall-item">
           <h4>语义向量</h4>
@@ -105,8 +106,12 @@ $ docker compose up -d</code></pre>
           <p>经典文本检索，补充精确匹配能力。</p>
         </div>
         <div class="recall-item">
-          <h4>编辑距离</h4>
-          <p>模糊匹配，容错拼写差异和相近词。</p>
+          <h4>稀疏检索</h4>
+          <p>BGE-M3 稀疏向量按词权重召回，兼顾字面与语义。</p>
+        </div>
+        <div class="recall-item">
+          <h4>图链路</h4>
+          <p>调用关系图检索，跨文件串联上下游实现。</p>
         </div>
       </div>
     </section>
@@ -119,7 +124,7 @@ $ docker compose up -d</code></pre>
         <tr><td>EMBEDDING_MODEL</td><td>BAAI/bge-m3</td><td>嵌入模型</td></tr>
         <tr><td>EMBEDDING_DIM</td><td>1024</td><td>向量维度</td></tr>
         <tr><td>GITHUB_WEBHOOK_SECRET</td><td>-</td><td>GitHub Webhook 密钥</td></tr>
-        <tr><td>HF_ENDPOINT</td><td>https://hf-mirror.com</td><td>HuggingFace 镜像源</td></tr>
+        <tr><td>HF_ENDPOINT</td><td>https://huggingface.co</td><td>HuggingFace 镜像源（国内网络建议设为 <code>https://hf-mirror.com</code>）</td></tr>
       </table>
     </section>
 

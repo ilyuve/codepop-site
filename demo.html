@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>在线演示 - Code:Pop</title>
-  <meta name="description" content="Code:Pop 在线演示：MCP 接入、管理后台、GitHub Webhook 自动索引、四路召回效果对比，纯 CSS 动画模拟真实交互。">
+  <meta name="description" content="Code:Pop 在线演示：MCP 接入、管理后台、GitHub Webhook 自动索引、多路召回效果对比，纯 CSS 动画模拟真实交互。">
   <meta name="theme-color" content="#F5F5F0">
   <meta property="og:title" content="在线演示 - Code:Pop">
-  <meta property="og:description" content="看它怎么工作 · MCP · Dashboard · Webhook · 四路召回">
+  <meta property="og:description" content="看它怎么工作 · MCP · Dashboard · Webhook · 多路召回">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23ff3d8a'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/fonts.css">
   <link rel="stylesheet" href="css/main.css">
@@ -40,7 +40,7 @@
   <article class="page demo-page">
     <header class="demo-hero">
       <h1 class="section-title">看它怎么工作</h1>
-      <p class="section-sub">// 用动画模拟真实场景：<span class="k">MCP 配置</span>、<span class="k">MCP 查询</span>、<span class="k">管理后台</span>、<span class="k">Webhook 自动索引</span>、<span class="k">四路召回对比</span>。</p>
+      <p class="section-sub">// 用动画模拟真实场景：<span class="k">MCP 配置</span>、<span class="k">MCP 查询</span>、<span class="k">管理后台</span>、<span class="k">Webhook 自动索引</span>、<span class="k">多路召回对比</span>。</p>
     </header>
 
     <section class="demo-section">
@@ -82,7 +82,7 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-sse@latest",
-        "http://localhost:8080/mcp/sse"
+        "http://localhost:18080/mcp/sse"
       ]
     }
   }
@@ -120,7 +120,7 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-sse@latest",
-        "http://localhost:8080/mcp/sse"
+        "http://localhost:18080/mcp/sse"
       ]
     }
   }
@@ -152,7 +152,7 @@
             <h4>选择 SSE 类型并填写 URL</h4>
             <div class="config-block simple">
               <pre><code>Server Type: SSE
-URL: http://localhost:8080/mcp/sse</code></pre>
+URL: http://localhost:18080/mcp/sse</code></pre>
               <button class="copy-btn" onclick="copyConfig(this)">复制 URL</button>
             </div>
           </div>
@@ -170,16 +170,20 @@ URL: http://localhost:8080/mcp/sse</code></pre>
         <h4>接入后可用的工具</h4>
         <div class="tools-grid">
           <div class="tool-card">
-            <div class="tool-name">codepop_search</div>
-            <div class="tool-desc">混合代码搜索（向量 + 符号 + BM25 + 调用图）</div>
+            <div class="tool-name">search_code</div>
+            <div class="tool-desc">混合代码搜索（向量 + 符号 + BM25 + 稀疏 + 调用图）</div>
           </div>
           <div class="tool-card">
-            <div class="tool-name">codepop_repos</div>
+            <div class="tool-name">list_repositories</div>
             <div class="tool-desc">列出所有已索引的代码仓库</div>
           </div>
           <div class="tool-card">
-            <div class="tool-name">codepop_symbols</div>
+            <div class="tool-name">list_file_symbols</div>
             <div class="tool-desc">查看指定文件的符号列表</div>
+          </div>
+          <div class="tool-card">
+            <div class="tool-name">analyze_impact</div>
+            <div class="tool-desc">分析符号变更的影响面与调用链</div>
           </div>
         </div>
       </div>
@@ -422,7 +426,7 @@ Validate   Business  Query  Entity
     </section>
 
     <section class="demo-section">
-      <h2><span class="step-badge">05</span>四路召回效果</h2>
+      <h2><span class="step-badge">05</span>多路召回效果</h2>
       <div class="query-demo">
         <div class="query-input">
           <span class="query-label">查询：</span>
@@ -430,7 +434,7 @@ Validate   Business  Query  Entity
         </div>
         <div class="recall-results">
           <div class="recall-way">
-            <h4>AST 结构检索</h4>
+            <h4>符号检索（AST）</h4>
             <div class="recall-score">匹配度: 85%</div>
             <div class="recall-match">auth/login.go → validateJWT()</div>
           </div>
@@ -445,12 +449,18 @@ Validate   Business  Query  Entity
             <div class="recall-match">utils/jwt.go → decodeJWT()</div>
           </div>
           <div class="recall-way">
-            <h4>编辑距离</h4>
-            <div class="recall-score">匹配度: 72%</div>
-            <div class="recall-match">legacy/auth_old.py → jwt_verify()</div>
+            <h4>稀疏检索</h4>
+            <div class="recall-score">匹配度: 80%</div>
+            <div class="recall-match">middleware/auth.go → verifyToken()</div>
+          </div>
+          <div class="recall-way">
+            <h4>图链路</h4>
+            <div class="recall-score">匹配度: 76%</div>
+            <div class="recall-match">api/login.go → LoginService → AuthService</div>
           </div>
         </div>
       </div>
+      <p class="demo-note">五种路径经 RRF 融合 + 重排后输出最终结果。</p>
     </section>
 
     <footer class="foot">

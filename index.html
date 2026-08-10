@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Code:Pop — 让代码,真正活着</title>
-  <meta name="description" content="Code:Pop 代码波普 — 本地 AI 代码记忆系统。通过 MCP 协议让 Claude Code、Cursor 直接查询你的代码库，支持四路召回、管理后台、GitHub Webhook 自动索引。">
+  <meta name="description" content="Code:Pop 代码波普 — 本地 AI 代码记忆系统。通过 MCP 协议让 Claude Code、Cursor 直接查询你的代码库，支持多路召回、管理后台、GitHub Webhook 自动索引。">
   <meta name="theme-color" content="#F5F5F0">
   <meta property="og:title" content="Code:Pop — 让代码,真正活着">
-  <meta property="og:description" content="本地 AI 代码记忆系统 · MCP 接入 · 四路召回 · 管理后台 · GitHub Webhook 自动索引">
+  <meta property="og:description" content="本地 AI 代码记忆系统 · MCP 接入 · 多路召回 · 管理后台 · GitHub Webhook 自动索引">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23ff3d8a'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/fonts.css">
@@ -118,11 +118,11 @@
     <h2 class="section-title">8 项能力 · <span class="hi b">同时呼吸</span>。</h2>
     <p class="section-sub">// 每一格都是 <span class="k">真实可落地</span> 的产品能力,不是抽象口号。</p>
     <section class="can-grid">
-      <div class="can v1"><div class="can-band-top"><span>★ 01</span><span>PARSE</span></div><div class="can-body"><div class="can-title">PARSE</div><div class="can-cn">代码解析</div><div class="can-desc">tree-sitter 拆解代码结构，精准识别函数、类、方法边界</div></div><div class="can-band-bot">PY · JAVA · GO · TS</div></div>
+      <div class="can v1"><div class="can-band-top"><span>★ 01</span><span>PARSE</span></div><div class="can-body"><div class="can-title">PARSE</div><div class="can-cn">代码解析</div><div class="can-desc">AST 拆解代码结构，精准识别函数、类、方法边界</div></div><div class="can-band-bot">PY · JAVA · GO · TS</div></div>
       <div class="can v2"><div class="can-band-top"><span>★ 02</span><span>VECTOR</span></div><div class="can-body"><div class="can-title">VECTOR</div><div class="can-cn">向量化</div><div class="can-desc">BAAI/bge-m3 生成 1024 维向量，保留语义而非字面</div></div><div class="can-band-bot">BGE-M3 1024D</div></div>
       <div class="can v3"><div class="can-band-top"><span>★ 03</span><span>MCP</span></div><div class="can-body"><div class="can-title">MCP</div><div class="can-cn">AI 接入</div><div class="can-desc">Claude Code、Cursor 直接查询你的私有代码库</div></div><div class="can-band-bot">IDE NATIVE</div></div>
       <div class="can v4"><div class="can-band-top"><span>★ 04</span><span>SEARCH</span></div><div class="can-body"><div class="can-title">SEARCH</div><div class="can-cn">语义检索</div><div class="can-desc">说人话提问，代码自己跳出来</div></div><div class="can-band-bot">NL → CODE</div></div>
-      <div class="can v5"><div class="can-band-top"><span>★ 05</span><span>RECALL</span></div><div class="can-body"><div class="can-title">RECALL</div><div class="can-cn">四路召回</div><div class="can-desc">AST + 向量 + BM25 + 编辑距离，确保不遗漏</div></div><div class="can-band-bot">4-WAY RECALL</div></div>
+      <div class="can v5"><div class="can-band-top"><span>★ 05</span><span>RECALL</span></div><div class="can-body"><div class="can-title">RECALL</div><div class="can-cn">五路召回</div><div class="can-desc">符号 + 向量 + BM25 + 稀疏 + 图链路，确保不遗漏</div></div><div class="can-band-bot">5-WAY RECALL</div></div>
       <div class="can v6"><div class="can-band-top"><span>★ 06</span><span>ADMIN</span></div><div class="can-body"><div class="can-title">ADMIN</div><div class="can-cn">管理后台</div><div class="can-desc">Web 界面查看索引状态、Token 消耗、查询日志</div></div><div class="can-band-bot">DASHBOARD</div></div>
       <div class="can v7"><div class="can-band-top"><span>★ 07</span><span>ALIVE</span></div><div class="can-body"><div class="can-title">ALIVE</div><div class="can-cn">实时索引</div><div class="can-desc">Git 提交自动触发索引更新，代码库时刻同步</div></div><div class="can-band-bot">PUSH → INDEX</div></div>
       <div class="can v8"><div class="can-band-top"><span>★ 08</span><span>LOCAL</span></div><div class="can-body"><div class="can-title">LOCAL</div><div class="can-cn">本地运行</div><div class="can-desc">数据留在本机，不上传云端</div></div><div class="can-band-bot">100% ON-DEVICE</div></div>
@@ -163,7 +163,7 @@
         <div class="feat-tag">FEATURE / 实时</div>
         <h3 class="feat-title">实时索引</h3>
         <div class="feat-title-en">REAL-TIME INDEXING</div>
-        <p class="feat-desc">基于 <strong>tree-sitter AST</strong> 解析,函数级切片精准提取代码语义单元,<strong>毫秒级写入 PostgreSQL + pgvector</strong>。Git 提交自动触发索引更新,工作流零打扰。</p>
+        <p class="feat-desc">基于 <strong>AST 解析</strong>（Python 走标准库 ast，其余语言走 tree-sitter）,函数级切片精准提取代码语义单元,<strong>毫秒级写入 PostgreSQL + pgvector</strong>。Git 提交自动触发索引更新,工作流零打扰。</p>
         <div class="feat-stack">▸ STACK: FastAPI · tree-sitter · BAAI/bge-m3 · PostgreSQL + pgvector</div>
         <pre class="feat-snippet"><span class="cm">$ git clone https://github.com/ilyuve/code-pop.git</span>
 <span class="cm">$ cd code-pop && docker compose up -d</span>
@@ -202,7 +202,7 @@
         <div class="feat-tag">FEATURE / 增量</div>
         <h3 class="feat-title">增量更新</h3>
         <div class="feat-title-en">INCREMENTAL UPDATE</div>
-        <p class="feat-desc"><strong>GitHub Webhook + 本地 git 监听</strong>双引擎,只重新索引<strong>变更的代码块</strong>,不全量扫描。每一次 push 都让记忆悄悄长大。</p>
+        <p class="feat-desc"><strong>GitHub/Gitee Webhook + 定时轮询</strong>双引擎,只重新索引<strong>变更的代码块</strong>,不全量扫描。每一次 push 都让记忆悄悄长大。</p>
         <div class="feat-stack">▸ STACK: GitHub Webhook · git diff · delta-chunking · pgvector</div>
         <pre class="feat-snippet"><span class="cm">$ git push origin main</span>
 <span class="cm"># GitHub Webhook → codepop sync</span>
