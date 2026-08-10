@@ -1,5 +1,5 @@
 /* ============================================
-   Code:Pop — Main Stylesheet
+   Code:Pop — Main Stylesheet v2 (Enhanced)
    波普艺术画册风格：米白纸张 + 深炭灰漫画线框
    ============================================ */
 
@@ -17,7 +17,13 @@
   --accent3: #fff34d;      /* 柠檬黄 */
   --accent4: #ff8a3d;      /* 警示橙 */
   --accent5: #6effb0;      /* 薄荷绿 */
+  --accent5-deep: #34d399; /* 薄荷绿-深 (高对比文本) */
   --accent6: #b88dff;      /* 紫 */
+  /* v2: transparency variants for subtle section backgrounds */
+  --accent-10: rgba(255, 61, 138, 0.08);
+  --accent2-10: rgba(42, 212, 255, 0.08);
+  --accent3-10: rgba(255, 243, 77, 0.08);
+  --accent5-10: rgba(52, 211, 153, 0.08);
   --font-display: 'Boldonse', 'EricaOne', sans-serif;
   --font-headline: 'BigShoulders', 'EricaOne', sans-serif;
   --font-body: 'Outfit', system-ui, sans-serif;
@@ -38,12 +44,45 @@ body {
     radial-gradient(circle, rgba(26, 26, 46, 0.10) 0 0.9px, transparent 1.1px);
   background-size: 18px 18px, 9px 9px;
   background-position: 0 0, 4px 4px;
+  /* v2: font smoothing */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* v2: Ben-Day dot slow scroll animation */
+  animation: dots-drift 120s linear infinite;
+}
+/* v2: body padding-top for fixed nav (kept from original second body rule) */
+body { padding-top: 56px; }
+
+/* v2: global noise texture overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
 }
 
 .page {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
+}
+.page { padding-top: 2.5rem; }
+
+/* v2: page position for vignette */
+.page { position: relative; }
+
+/* v2: subtle vignette effect on page edges */
+.page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(45,45,45,0.06) 100%);
 }
 
 /* ====== TICKER BAR ====== */
@@ -60,6 +99,7 @@ body {
   border-top: 2px solid var(--ink);
   border-bottom: 2px solid var(--ink);
 }
+.ticker { margin-top: 0; }
 .ticker-track { display: inline-block; animation: scroll 40s linear infinite; }
 .ticker span { padding: 0 1.5rem; }
 .ticker .dot { color: var(--accent); }
@@ -68,7 +108,7 @@ body {
 /* ====== HERO ====== */
 .hero {
   position: relative;
-  padding: 4.5rem 0 2.5rem;
+  padding: 4rem 0 2rem; /* v2: was 4.5rem 0 2.5rem, aligned to 8px grid */
   border-bottom: 4px solid var(--ink);
   background: rgba(250, 250, 250, 0.72);
   box-shadow: 0 6px 0 var(--accent3);
@@ -127,6 +167,8 @@ body {
 .product-name .word-code {
   color: var(--ink);
   text-shadow: 6px 6px 0 var(--accent), 12px 12px 0 var(--accent2);
+  /* v2: chromatic aberration breathing animation */
+  animation: glitch-breathe 4s ease-in-out infinite;
 }
 .product-name .colon {
   color: var(--accent);
@@ -136,14 +178,22 @@ body {
 .product-name .word-pop {
   color: var(--ink);
   text-shadow: 6px 6px 0 var(--accent3), 12px 12px 0 var(--accent);
+  /* v2: chromatic aberration breathing animation (offset delay) */
+  animation: glitch-breathe 4s ease-in-out infinite 0.5s;
 }
 @keyframes blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0.2; } }
+
+/* v2: glitch-breathe keyframes */
+@keyframes glitch-breathe {
+  0%, 100% { text-shadow: 4px 4px 0 var(--accent), 8px 8px 0 var(--accent2); }
+  50% { text-shadow: 6px 6px 0 var(--accent), 12px 12px 0 var(--accent2); }
+}
 
 .product-name-cn {
   font-family: var(--font-headline);
   font-weight: 700;
   font-size: clamp(2rem, 5vw, 3.5rem);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em; /* v2: was 0.05em, increased for poster impact */
   color: var(--ink);
   margin-top: 0.5rem;
 }
@@ -156,6 +206,7 @@ body {
   letter-spacing: -0.02em;
   margin: 2.5rem 0 1.5rem;
   color: var(--ink);
+  letter-spacing: 0.08em; /* v2: added letter-spacing */
 }
 .tagline .heart { color: var(--accent); display: inline-block; animation: pulse 0.9s ease-in-out infinite; }
 .tagline .alive { background: var(--accent); color: var(--ink); padding: 0 0.15em; transform: skew(-6deg); display: inline-block; border: 2px solid var(--ink); }
@@ -164,9 +215,9 @@ body {
 .sub-tagline {
   font-family: var(--font-mono);
   font-size: clamp(1.12rem, 1.8vw, 1.38rem);
-  line-height: 1.8;
+  line-height: 1.85; /* v2: was 1.8, more breathing room */
   color: var(--ink-soft);
-  max-width: 820px;
+  max-width: 800px; /* v2: was 820px, aligned to 8px grid */
   letter-spacing: 0.02em;
   border-left: 4px solid var(--accent);
   padding-left: 1rem;
@@ -190,7 +241,7 @@ body {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin: 5rem 0 1.5rem;
+  margin: 5rem 0 2rem; /* v2: was 5rem 0 1.5rem, aligned to 8px grid */
   flex-wrap: wrap;
 }
 .section-tag .num {
@@ -200,6 +251,10 @@ body {
   color: var(--accent);
   -webkit-text-stroke: 1.5px var(--ink);
   text-shadow: 4px 4px 0 var(--bg3);
+  /* v2: stamp/seal effect */
+  transform: rotate(-3deg);
+  -webkit-text-stroke: 2.5px var(--ink); /* v2: increased border stroke */
+  filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.12)); /* v2: subtle drop-shadow */
 }
 .section-tag .num.b { color: var(--accent2); }
 .section-tag .num.c { color: var(--accent3); }
@@ -222,7 +277,7 @@ body {
   font-size: clamp(2.4rem, 5vw, 4rem);
   line-height: 0.95;
   letter-spacing: -0.02em;
-  margin-bottom: 36px;
+  margin-bottom: 40px; /* v2: was 36px, aligned to 8px grid */
   color: var(--ink);
 }
 .section-title .hi { background: var(--accent); color: var(--ink); padding: 0 0.15em; border: 2px solid var(--ink); }
@@ -341,6 +396,8 @@ body {
   grid-template-columns: 42px 1fr;
   gap: 0.8rem;
   align-items: center;
+  /* v2: subtle hover lift */
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .arch-lane.warm .arch-card { color: var(--accent); }
 .arch-lane.cool .arch-card { color: var(--accent2); }
@@ -357,6 +414,12 @@ body {
   z-index: 3;
 }
 .arch-card:last-child::after { display: none; }
+
+/* v2: arch-card hover effects */
+.arch-card:hover { transform: translateY(-2px); }
+.arch-lane.warm .arch-card:hover { box-shadow: 4px 4px 0 var(--accent); }
+.arch-lane.cool .arch-card:hover { box-shadow: 4px 4px 0 var(--accent2); }
+
 .arch-badge {
   font-family: var(--font-headline);
   font-weight: 700;
@@ -473,22 +536,18 @@ body {
 }
 .memory-core .core-note span {
   display: block;
-  text-shadow:
-    -2px -2px 0 #FFFFFF,
-     2px -2px 0 #FFFFFF,
-    -2px  2px 0 #FFFFFF,
-     2px  2px 0 #FFFFFF,
-     0   -2px 0 #FFFFFF,
-     0    2px 0 #FFFFFF,
-    -2px  0   0 #FFFFFF,
-     2px  0   0 #FFFFFF;
+  /* v2: removed 8-direction white stroke shadow to avoid conflict with glow effects */
 }
 .memory-core .core-note .breath {
   color: var(--accent2);
   margin-bottom: 0.35rem;
+  /* v2: dual-color cyan glow effect */
+  text-shadow: 0 0 20px rgba(42, 212, 255, 0.6), 0 0 40px rgba(42, 212, 255, 0.25);
 }
 .memory-core .core-note .arrive {
   color: #FF006E;
+  /* v2: dual-color pink glow effect */
+  text-shadow: 0 0 20px rgba(255, 61, 138, 0.6), 0 0 40px rgba(255, 61, 138, 0.25);
 }
 .arch-caption {
   margin-top: 1.2rem;
@@ -545,7 +604,7 @@ body {
 .can.v3 { background: var(--accent3); color: var(--ink); }
 .can.v4 { background: var(--accent2); color: var(--ink); }
 .can.v5 { background: var(--bg3); color: var(--ink); }
-.can.v6 { background: var(--accent5); color: var(--ink); }
+.can.v6 { background: var(--accent5-deep); color: var(--ink); } /* v2: was var(--accent5), now deep for text contrast */
 .can.v7 { background: var(--accent6); color: var(--ink); }
 .can.v8 { background: var(--accent4); color: var(--ink); }
 
@@ -602,7 +661,7 @@ body {
   grid-template-columns: 1.05fr 1fr;
   gap: 0;
   border: 3px solid var(--ink);
-  background: var(--bg3);
+  background: var(--accent-10); /* v2: subtle pink tint background */
   border-radius: 4px;
   margin-bottom: 3rem;
 }
@@ -630,6 +689,8 @@ body {
   transform: rotate(-2deg);
   margin-bottom: 1.5rem;
   letter-spacing: 0.1em;
+  /* v2: paper sticker feel */
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.15);
 }
 .pain-headline {
   font-family: var(--font-headline);
@@ -643,7 +704,7 @@ body {
 .pain-headline .strike {
   text-decoration: line-through;
   text-decoration-color: var(--accent);
-  text-decoration-thickness: 4px;
+  text-decoration-thickness: 3px; /* v2: was 4px, reduced for elegance */
   color: var(--muted);
 }
 .pain-headline .alive-flash { color: var(--accent); font-style: italic; }
@@ -652,7 +713,7 @@ body {
   font-family: var(--font-body);
   color: var(--ink-soft);
   font-size: 0.98rem;
-  line-height: 1.7;
+  line-height: 1.75; /* v2: was 1.7, aligned to better rhythm */
   position: relative;
 }
 .pain-body strong { color: var(--accent); font-weight: 700; }
@@ -709,6 +770,11 @@ body {
   letter-spacing: 0.02em;
 }
 .scenario .meta strong { color: var(--ink-soft); }
+
+/* v2: color-aware card hover for scenarios */
+.scenario.s1:hover { border-color: var(--accent3); box-shadow: 4px 4px 0 var(--accent3); }
+.scenario.s2:hover { border-color: var(--accent); box-shadow: 4px 4px 0 var(--accent); }
+.scenario.s3:hover { border-color: var(--accent2); box-shadow: 4px 4px 0 var(--accent2); }
 
 /* ====== FEATURE GRID ====== */
 .feature-grid {
@@ -785,6 +851,9 @@ body {
   color: var(--bg3);
   margin-bottom: 0.9rem;
   letter-spacing: 0.02em;
+  /* v2: fabric/cloth texture */
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.04) 2px, rgba(255,255,255,0.04) 4px);
+  font-variant: small-caps;
 }
 .feat.f1 .feat-stack { color: var(--accent3); }
 .feat.f2 .feat-stack { color: var(--accent); }
@@ -801,6 +870,35 @@ body {
   border: 2px solid var(--code-bg);
   box-shadow: 5px 5px 0 var(--code-bg);
   overflow-x: auto;
+  /* v2: macOS terminal dots */
+  position: relative;
+  border-radius: 6px;
+  padding-top: 2rem;
+}
+/* v2: macOS terminal title bar */
+.feat-snippet::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background: #16162a;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px 6px 0 0;
+}
+/* v2: macOS terminal traffic light dots */
+.feat-snippet::after {
+  content: '';
+  position: absolute;
+  top: 9px;
+  left: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff5f56;
+  box-shadow: 16px 0 0 #ffbd2e, 32px 0 0 #27c93f;
+  z-index: 1;
 }
 .feat-snippet .pp { color: var(--accent); }
 .feat-snippet .gg { color: var(--accent3); }
@@ -825,6 +923,9 @@ body {
   position: relative;
   overflow: hidden;
 }
+/* v2: subtle tinted backgrounds for case cards */
+.case-wrap .case.c1 { background: var(--accent-10); }
+.case-wrap .case.c2 { background: var(--accent2-10); }
 .case-head {
   padding: 1.5rem;
   display: flex;
@@ -976,6 +1077,19 @@ body {
   box-shadow: 6px 6px 0 var(--accent), 12px 12px 0 var(--accent2);
   margin-top: 0.5rem;
   text-align: left;
+  /* v2: sticky note appearance */
+  transform: rotate(1.5deg);
+  border-radius: 2px;
+  position: relative;
+}
+/* v2: sticky note lined texture */
+.cta-cmd::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.06) 3px, rgba(255,255,255,0.06) 6px);
+  pointer-events: none;
+  border-radius: inherit;
 }
 .cta-cmd .prompt { color: var(--accent); margin-right: 0.5rem; }
 .cta-cmd .cmd-line { display: block; }
@@ -1120,11 +1234,6 @@ body {
   border-radius: 2px;
   transition: all 0.25s;
 }
-
-/* offset body for fixed nav + ticker */
-body { padding-top: 56px; }
-.ticker { margin-top: 0; }
-.page { padding-top: 2.5rem; }
 
 /* ====== DOCS & DEMO PAGES ====== */
 .doc-page .doc-hero,
@@ -2058,4 +2167,10 @@ code {
   .product-name .word-code, .product-name .word-pop {
     text-shadow: 3px 3px 0 var(--accent), 6px 6px 0 var(--accent2);
   }
+}
+
+/* v2: Ben-Day dot slow scroll animation */
+@keyframes dots-drift {
+  0% { background-position: 0 0, 4px 4px; }
+  100% { background-position: 0 900px, 4px 904px; }
 }
