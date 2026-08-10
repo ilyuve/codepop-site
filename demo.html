@@ -78,13 +78,13 @@
               <pre><code>{
   "mcpServers": {
     "codepop": {
-      "url": "http://localhost:18080/mcp/sse"
+      "url": "http://localhost:18080/mcp/http"
     }
   }
 }</code></pre>
               <button class="copy-btn" onclick="copyConfig(this)">复制</button>
             </div>
-            <p class="demo-note">Trae 自动识别为 HTTP 类型（远程 MCP），无需本地进程</p>
+            <p class="demo-note">Trae 会按 URL 后缀选择协议，<code>/mcp/sse</code> 结尾会被判定为旧版 SSE 导致连接超时，因此 Trae 使用 <code>/mcp/http</code></p>
           </div>
         </div>
         <div class="mcp-step">
