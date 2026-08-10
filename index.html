@@ -176,7 +176,7 @@
 [<span class="gn">12:04:31</span>] <span class="pp">PUSH</span>  src/auth/jwt.go
        └─ parse_ast() <span class="gg">→</span> 3 chunks
        └─ embed() <span class="gg">→</span> 1024-dim
-       └─ <span class="ok">✓ store()</span> in <span class="vi">23ms</span></pre>
+       └─ <span class="ok">✓ store()</span> 完成</pre>
       </div>
       <div class="feat f2">
         <div class="feat-num">02</div>
@@ -184,11 +184,11 @@
         <h3 class="feat-title">语义检索</h3>
         <div class="feat-title-en">SEMANTIC SEARCH</div>
         <p class="feat-desc"><strong>BAAI/bge-m3 嵌入模型</strong>把代码与查询编码到同一向量空间,理解<strong>代码语义</strong>而非关键词匹配。忘了函数名也能找回来。</p>
-        <div class="feat-stack">▸ STACK: bge-m3 (1024d) · cosine · top-k=5 · re-rank</div>
-        <pre class="feat-snippet"><span class="pr">codepop&gt;</span> ask <span class="gg">"用户登录的 JWT 验证"</span>
+        <div class="feat-stack">▸ STACK: bge-m3 (1024d) · cosine · top-k=20 · re-rank</div>
+        <pre class="feat-snippet"><span class="pr">🔍</span> <span class="gg">用户登录的 JWT 验证</span>
 
-<span class="cm"># vectorize query → cosine search</span>
-<span class="cm">→ found 3 matches in 87ms:</span>
+<span class="cm"># query → 五路召回 + 重排</span>
+<span class="cm">→ 返回 top-20 相关片段：</span>
 
   <span class="bb">★ 0.94</span>  src/auth/<span class="gn">jwt_verify.go</span>:42
         <span class="cm">// validate token signature ...</span>
@@ -212,7 +212,7 @@
    <span class="vi">~</span>  src/auth/jwt.go        <span class="gn">[~3 chunks]</span>
    <span class="pp">-</span>  legacy/auth_old.py     <span class="gn">[-1 chunk]</span>
 
-<span class="ok">✓</span> delta indexed in <span class="vi">142ms</span>
+<span class="ok">✓</span> delta indexed 完成
 <span class="ok">✓</span> total alive: <span class="bb">41,903 chunks</span></pre>
       </div>
     </section>
@@ -227,8 +227,8 @@
           <ol class="case-flow">
             <li>打开 Code:Pop 索引全部本地 repo</li>
             <li class="hot">问:"令牌桶限流的实现"</li>
-            <li>跨 12 个项目语义匹配 (cosine ≥ 0.85)</li>
-            <li>0.3 秒返回 4 段相关代码 + 调用上下文</li>
+            <li>跨多个代码库语义匹配，忘了函数名也能找回</li>
+            <li>秒级返回相关代码 + 调用上下文</li>
             <li class="hot">复制 → 改 2 行参数 → 直接用上</li>
           </ol>
           <div class="case-result"><span class="lbl">RESULT / 实测对比</span>从"重新写一遍 <strong>90 分钟</strong>"<br>压缩到 <strong>"找回 + 改造 = 6 分钟"</strong></div>
